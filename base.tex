@@ -89,18 +89,18 @@ breaklinks=true,
 \maketitle
 
 \begin{abstract}
-  The development of interactive shows and interactive user interfaces for exhibitions
+  The development of interactive shows and interactive user interfaces for arts \& exhibitions
 has traditionally been done with tools that pertain to two broad metaphors. 
 Cue-based environments work by making groups of parameters and sending them to remote devices, 
-while more interactive applications, for instance in museums, are generally written 
-in domain-specific programming environments, like Max/MSP, Processing or OpenFrameworks.
-  In this paper, we argue about the peculiar problematics that arise in such environments, and we present 
+while more interactive applications are generally written in domain-specific 
+programming environments, like Max/MSP, Processing or OpenFrameworks.
+  In this paper, we argue about the specific issues that arise in such environments, and we present 
 i-score : an extensive and collaborative software suite that bridges
 the gap between time-based, logic-based and flow-based interactive application authoring tools. 
 This is done in a single cohesive graphical user interface, built upon a few simple and novel primitives.
-  i-score allows the creation of software meant to operate in a large parameter space, 
+  i-score allows the creation of software meant for operation in a large parameter space, 
 and enables artists to express easily both temporal logic and structured programming, 
-with facilities for automating and mapping single and multi-dimensional parameters.
+with facilities for automating and applying transformations to single and multi-dimensional parameters.
     
 \end{abstract}
 
@@ -136,27 +136,17 @@ interactive applications easily for non-programmers, and
 \subsection{Use cases}
 
 \subsection{Existing approaches}
+
 \subsubsection{Content creation}
 Flash, domain-specific software...
-\subsubsection{Document models} % bof ici
-CORBA, DBus, DOM HTML, DOM Qt, DOM Jamoma...
 
 \subsubsection{Flow control models}
  % du tout temporel au tout logique en passant par systèmes réactifs ?
-Max, Processing, OF, PureData, React.[...], Integra Live, Unity \& envs de jeu, etc. (revoir slides), Chronic (cf. téléchargements), OpenMusic, Antescofo (et Ascograph), logiciels de la conférence sur appli réactives (cf. slack).
+Max, Processing, OF, PureData, React.[...], Integra Live (qui est plutôt orienté son), Unity \& envs de jeu, etc. (revoir slides), Chronic (cf. téléchargements), OpenMusic, Antescofo (et Ascograph), logiciels de la conférence sur appli réactives (cf. slack).
 
+\subsubsection{Document models and application description} % bof ici
+CORBA, DBus, DOM HTML, DOM Qt, DOM Jamoma...
 
-%[[ Examples de cas d'utilisation ]] (cas renaud, cas BY)
-
-% [[ État de l'art et problèmes avec l'existant ]]
-
-%% Interfaces pour création de contenu (flash, etc.)
-
-%% Modèles de paramètres (parler de CORBA, dbus, DOM JS, DOM Qt... ?)
-
-%% Modèles de contrôle dans le temps / dans la logique (du tout temporel au tout logique)
-%% Parler des systèmes réactifs comme Max?
-%% Différences avec Integra live (qui est plutôt orienté son)
 
 \section{A model for orchestration}
 We will present our constructs by starting with the purely temporal ones, 
@@ -165,42 +155,50 @@ and by extending to the more logical aspects.
 - Duration
 - Synchronization
 
+- Mettre le tableau qui montre les problèmes avec les graphes qui s'interposent (en partant des petits schémas)
 \subsection{Structured temporal programming}
-- Conditions
+- Conditions and trigger of synchronizations
 
 Building from it : 
-- Loops (that works like playheads)
+- Loops (because interpreter works like a playhead).
+-> parler des différentes possibilités que ça ouvre.
 
-%% Conditions, boucles
-
-%% Hiérarchie
 
 \section{From structure to content}
-- Hiérarchie.
+- Processus
+- Hiérarchie (qu'on a déjà présenté).
+
 - Paramètres : actuellement, scope global
-Puis scope local dans la hiérarchie
+Puis scope local dans la hiérarchie ?
 
-Idée : transformations appliquées à une boîte
-%% Synchro d'état, problématique du temps 
-%% considéré comme instantané et relié "vu d'assez loin" 
-%% et qui a besoin d'être séparé en mode "avant / après" .
+Perspective : transformations appliquées à une boîte
 
-%% Parler des multiples vues qu'on peut avoir
+- Questions de synchronisation d'états (avant / pendant / après)
 
-%% Mapping dans le temps et l'espace
+- Passage de messages OSC pour contrôle externe
 
-%% Possibilités de contrôle par passage de messages
+- Visualisations ?
 
-%% Est analogue à un petit système d'exploitation adapté pour applications multimédia
+- Automations  
 
+- Mappings 1D
 
+- Mappings 2D
+
+- Conclusion : analogue à un petit OS spécialisé pour applications multimédia.
 
 \section{Shortcomings (et pistes)}
-%% Problématiques de trace d'exécution
-%% Problématiques de débug et pistes envisagées
-%% Possibilités pour boucles
-%% Visualisation en temps réel des applications - faut-il faire un environnement entièrement intégré ? Étendre pour certains types en particulier ?
+\subsection{Debugging}
+- Getting execution traces
+-> How to go at any point in the flow of a software ? The external state might not be correct.
+(Conoundrum of "instant debugging" but requiring for instance a smoke machine to spit smoke for ten minutes)
+
+- Visualisation / simulation du résultat. 
+%% Visualisation en temps réel des applications - faut-il faire un environnement
+% % entièrement intégré ? Étendre pour certains types en particulier ?
+
 \section{Evaluation}
+- Time to develop artistic installations greatly reduced.
 %% Amélioration en temps de développement pour interfaces artistiques
 
 \section{Conclusion}
