@@ -22,7 +22,7 @@
 \usepackage{graphics} % for EPS, load graphicx instead
 \usepackage{times}    % comment if you want LaTeX's default font
 \usepackage{url}      % llt: nicely formatted URLs
-
+\usepackage{listings}
 % llt: Define a global style for URLs, rather that the default one
 \makeatletter
 \def\url@leostyle{%
@@ -128,10 +128,12 @@ cue paradigm, which is useful as long as there is no complex logic involved,
 or towards the programming paradigm, where it is hard to write simple scenarios 
 like "move a spotlight in horizontal oscillation for ten seconds; after the first 5 
 seconds, if a dancer jumps on the stage, play a sound and increase reverberation steadily as long as the dancer is on stage".
-interactive applications easily for non-programmers, and 
 
+We will first present the current practices on the field, including the depiction of three specific artistic installations revolving around the idea of a computer-controlled orchestration.
+
+We will then explain the paradigm of the i-score software, which allows to express complex scenarios in a single graphical interface. These scenarios can then be deported or even embedded in other tools thanks to a C++ API. 
 \subsection{Motivation}
-The need for authoring software able to operatoe in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
+The need for authoring software able to operate in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
 
 \subsection{Use cases}
 To explain properly the kind of artistic demeanors we are working with, there will be three case studies.
@@ -156,30 +158,77 @@ CORBA, DBus, DOM HTML, DOM Qt, DOM Jamoma...
 
 \section{A model for orchestration}
 We will present our constructs by starting with the purely temporal ones, 
-and by extending to the more logical aspects.
-\subsection{Specification of temporal relationships}
-- Duration
-- Synchronization
+and then extend to the constructs relevant in a structured programming context.
+Finally we will see how data is handled.
 
-- Mettre le tableau qui montre les problèmes avec les graphes qui s'interposent (en partant des petits schémas)
+This model has evolved through many stages of refinement, first starting as an application of 
+Allen's relationships and moving on to NTCCs, Petri nets, finite automatons, and reactive languages.
+
+\subsection{Specification of temporal relationships}\label{sec.temporal}
+The first required primitive is the one able to depict a duration.
+
+We shall call it a time constraint.
+
+The time constraint is not necessarily a fixed duration : to allow for interactiveness, 
+we must allow it to represent a range, or span of time. For instance, a time constraint may last between 3 and 5 seconds.
+
+Then, we introduce a mean to synchronize multiple time constraints : a time node. 
+
+This allows multiple time constraints to exist both serially, and in parallel. 
+
 
 \subsection{Structured temporal programming}
-- Conditions and trigger of synchronizations
+Maintenant que nous avons des primitives permettant de décrire l'écoulement du temps, nous introduisons les éléments s'apparentant à la programmation structurée.
 
-Building from it : 
-- Loops (because interpreter works like a playhead).
--> parler des différentes possibilités que ça ouvre : 
-* Canons
-* Fractales
-* etc..
+La base est la conditionnelle. Dans notre cas, nous aimerions dire : cette contrainte temporelle ne s'exécute que si tel paramètre a atteint cette valeur.
+
+Du fait de la présence de logique temporelle, il y a deux cas de conditions : 
+- Les conditions qui ne prennent pas le temps en compte. Elles sont vraies ou fausses, et la chose qui compte est leur valeur au moment ou elles seront évaluées. Elles n'ont d'influence que sur le futur.
+- Les conditions qui contrôlent le flot du temps. Elles ont le pouvoir de déclencher des intervalles lorsqu'elles passent à vrai. C'est pour cela que nous avons besoin d'avoir un minimum et un maximum à nos contraintes temporelles. Elles ont donc aussi une influence sur des contraintes temporelles précédentes : on dirait par exemple : "cette contrainte dure *jusqu'à ce que la condition soit vraie". On peut ainsi faire durer une contrainte à l'infini en mettant une condition "faux". Ceci permet d'écrire des applications avec un fonctionnement "moteur", qui ne sont pas sensées s'arrêter.
+
+Nous séparons ces deux cas en deux éléments de syntaxe de notre langage : l'évènement pour le premier, et le trigger pour le second.
+
+Les deux font interface entre les contraintes et les noeuds temporels.
+
+À partir de là, nous pouvons considérer la notion de boucle. Pour cela, il est nécessaire de bien clarifier la séparation entre les données spécifiées par l'auteur, et le résultat de l'exécution.
+
+Quand un auteur ou programmeur spécifie une boucle, il décrit un motif général qui est voué à être répété. Cependant, à chaque itération des cas différents peuvent arriver : 
+
+\begin{lstlisting}
+while t < 100
+  if a
+    [...] short iteration [...]
+  else
+    [...] long iteration [...]           
+\end{lstlisting}
+
+Dans notre cas, nous avons donc besoin d'une contrainte souple pour pouvoir avoir des boucles intéressantes. 
+
+On décrit donc la boucle comme une paire (noeud temporel, contrainte). La contrainte est des deux côtés du noeud temporel : une fois qu'elle a été lue, elle peut être re-lue depuis le début, sachant que l'on progresse dans l'écoulement du temps.
 
 
 \section{From structure to content}
+Maintenant que nous avons établi l'intégralité des éléments nécessaires à une structuration logique et temporelle, nous nous intéressons aux données.
+
+Comme cela a pu être vu en section~\ref{sec.temporal}, nous possédons deux primitives temporelles : une pour les durées et une pour les instants.
+
+Il y a deux points de vue possibles : le premier est que le temps doit être traité comme un continuum : un instant n'a pas d'existence propre et on ne peut que l'approcher comme on approcherait un élément dans un ensemble dense. Ceci permet de raisonner simplement sur des problématiques de positionnement d'éléments par rapport au temps.
+
+Néanmoins, il est parfois utile de briser l'abstraction et d'obtenir le contrôle bas niveau : dans des logiciels audio, c'est par exemple le cas de l'accès à la sample.
+
+Le type de données avec lequel i-score est le plus utilisé est le message OSC. Là aussi, il est nécessaire d'avoir un accès précis au comportement qui s'applique lorsque par exemple, deux courbes se suivent et portent sur la même adresse sans que la fin de la première courbe ait la même valeur que le début de la suivante. Veut-on privilégier une valeur ? Utiliser les deux ? L'utilisateur doit avoir le choix de la valeur envoyée lorsqu'il y a une discrepancy manifeste entre un instant logique dans le scénario, et un instant physique, ordonné par l'horloge d'une carte son ou du cpu.
 - Processus
 - Hiérarchie (qu'on a déjà présenté).
 
 - Paramètres : actuellement, scope global
 Puis scope local dans la hiérarchie ?
+
+- Arbre local de paramètres : 
+=> influences pour boucles : on peut faire des boucles auto-dépendantes car on a accès au temps.
+-> parler des différentes possibilités que ça ouvre : 
+* Canons
+* Fractales
+* etc..
 -> rejoint la programmation structurée via les données
 
 Perspective : transformations appliquées à une boîte
