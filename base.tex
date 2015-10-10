@@ -217,19 +217,64 @@ Il y a deux points de vue possibles : le premier est que le temps doit être tra
 Néanmoins, il est parfois utile de briser l'abstraction et d'obtenir le contrôle bas niveau : dans des logiciels audio, c'est par exemple le cas de l'accès à la sample.
 
 Le type de données avec lequel i-score est le plus utilisé est le message OSC. Là aussi, il est nécessaire d'avoir un accès précis au comportement qui s'applique lorsque par exemple, deux courbes se suivent et portent sur la même adresse sans que la fin de la première courbe ait la même valeur que le début de la suivante. Veut-on privilégier une valeur ? Utiliser les deux ? L'utilisateur doit avoir le choix de la valeur envoyée lorsqu'il y a une discrepancy manifeste entre un instant logique dans le scénario, et un instant physique, ordonné par l'horloge d'une carte son ou du cpu.
+
+Dans le logiciel, le type de données que nous manipulons le plus est donc le message, qui associe une valeur à une addresse. Plusieurs messages regroupés forment un état, par analogie avec les cues.
+
 - Processus
+Pour encapsuler ces données, dans le cadre d'une durée nous choisissons principalement la métaphore du processus. Une contrainte peut contenir un nombre arbitraire de processus; l'interface d'un processus est très simple et permet de décrire des cas complexes. Elle est analogue à un système de passage de messages.
+
+\begin{lstlisting}
+    interface Process {
+       State state(Time)
+    }
+\end{lstlisting}
+
+Cea permet à la contrainte de fonctionner de la même manière qu'une tête de lecture : une horloge va envoyer des ticks; à chaque tick le processus doit renvoyer son état. Ce fonctionnement semble fonctionnel pur mais rien n'empêche d'avoir des effets de bord / sauvegarder un état.
+Sur un plan théorique (et au niveau de l'exécution) un processus peut être vu comme une succession d'états, néanmoins ce serait une abstraction difficile à manier pour l'auteur, notamment en ce qui concerne les automations.
+
+Il convient donc de noter que les processus peuvent s'arrêter avant leur fin apparente, si par exemple il y a un trigger sur la fin de la contrainte.
+
+Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
+
+- États
+Les processus ont un sens sur une durée. Cependant, il existe aussi le cas ou nous voudrions envoyer des données à un instant précis : par exemple, pour lancer la lecture d'un média distant.
+Pour ce faire, i-score matérialise la notion d'état instantané dans un élément graphique.
+
+Les états sont situés au début et à la fin de chaque contrainte temporelle. Cela permet de spécifier très simplement des interpolations entre deux paramètres, en prenant une capture d'un premier état puis d'un second.
+
+Nous avons donc l'ensemble des éléments de base qui composent ce que l'on nomme un scénario : en reliant contraintes, évènements, états, triggers et noeuds temporels nous pouvons déjà définir ces scénarios complexes, mais linéaires.
+
 - Hiérarchie (qu'on a déjà présenté).
+À l'aide de la notion de processus, nous pouvons introduire le concept de hiérarchie. La notion de scénario que nous avons présenté peut être placée dans un processus, qui aura comme spécificité d'avoir un noeud temporel de début. Ainsi, son état peut être récupéré récursivement à chaque instant en fonction des appels du parent.
 
-- Paramètres : actuellement, scope global
-Puis scope local dans la hiérarchie ?
+Par défaut, un document est constitué de deux noeuds temporels, et d'une contrainte intermédiaire qui contient un processus Scénario.
+Il aurait été possible d'avoir le cas inverse : l'élément de base aurait pu être un processus scénario dans lequel on commencerait à travailler; cependant avoir une contrainte comme élément parent permet de contrôler la vitesse de lecture globale de manière interne au formalisme. De même, on peut faire "lecture" sur le document en envoyant des messages OSC au noeud temporel de début.
 
-- Arbre local de paramètres : 
-=> influences pour boucles : on peut faire des boucles auto-dépendantes car on a accès au temps.
--> parler des différentes possibilités que ça ouvre : 
-* Canons
-* Fractales
-* etc..
--> rejoint la programmation structurée via les données
+- De même, la boucle est implémentée en terme de processus.
+
+- Précision sur les états
+Les états se réfèrent la plupart du temps à des périphériques distants : d'autres logiciels compatibles OSC comme Max/MSP ou PureData, ou bien des appareils MIDI.
+
+L'accès se fait via une interface commune, organisée sous forme d'arbre.
+
+En effet, cela permet de représenter simplement les DOM courants.
+
+% Mettre capture d'écran d'un objet Qt ?
+
+Cette interface peut être simplement réimplémentée. Cependant il faut tenir compte du fait que tous les protocoles n'offrent pas les mêmes capacités : par exemple un arbre MIDI est entièrement fixe car les messages sont fixés dans la spécification MIDI. En revanche un arbre qui correspondrait à un logiciel écrit en Max/MSP serait beaucoup plus dynamique.
+
+Les paramètres présents dans cet arbre peuvent ensuite être accédés depuis tout le logiciel.
+
+Pour l'instant, ils sont donc organisés sous forme d'état global, à l'image d'une base de données. Cependant nous aimerions évoluer vers un état avec une portée locale, peut-être avec un raffinement au niveau des processus (Processus "LocalScope"). Cela rejoindrait le concept d'unité de données de la programmation structurée.
+
+De plus, le scénario présente lui aussi son propre arbre de paramètres, addressable depuis l'intérieur comme l'extérieur.
+
+Cela permet notamment de se référer au temps qui s'est écoulé à l'exécution pour s'en reservir dans d'autres contraintes.
+
+Cela permet par exemple de faire des boucles à durée convergente, des canons, et des systèmes en forme de fractale. % donner exemple
+
+
+-> opérateurs ? et =
 
 Perspective : transformations appliquées à une boîte
 
