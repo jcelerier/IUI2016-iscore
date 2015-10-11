@@ -220,7 +220,7 @@ Le type de données avec lequel i-score est le plus utilisé est le message OSC.
 
 Dans le logiciel, le type de données que nous manipulons le plus est donc le message, qui associe une valeur à une addresse. Plusieurs messages regroupés forment un état, par analogie avec les cues.
 
-- Processus
+\subsection{Processes}
 Pour encapsuler ces données, dans le cadre d'une durée nous choisissons principalement la métaphore du processus. Une contrainte peut contenir un nombre arbitraire de processus; l'interface d'un processus est très simple et permet de décrire des cas complexes. Elle est analogue à un système de passage de messages.
 
 \begin{lstlisting}
@@ -229,14 +229,14 @@ Pour encapsuler ces données, dans le cadre d'une durée nous choisissons princi
     }
 \end{lstlisting}
 
-Cea permet à la contrainte de fonctionner de la même manière qu'une tête de lecture : une horloge va envoyer des ticks; à chaque tick le processus doit renvoyer son état. Ce fonctionnement semble fonctionnel pur mais rien n'empêche d'avoir des effets de bord / sauvegarder un état.
+Cela permet à la contrainte de fonctionner de la même manière qu'une tête de lecture : une horloge va envoyer des ticks; à chaque tick le processus doit renvoyer son état. Ce fonctionnement semble fonctionnel pur mais rien n'empêche d'avoir des effets de bord / sauvegarder un état.
 Sur un plan théorique (et au niveau de l'exécution) un processus peut être vu comme une succession d'états, néanmoins ce serait une abstraction difficile à manier pour l'auteur, notamment en ce qui concerne les automations.
 
 Il convient donc de noter que les processus peuvent s'arrêter avant leur fin apparente, si par exemple il y a un trigger sur la fin de la contrainte.
 
 Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
 
-- États
+\subsection{States}
 Les processus ont un sens sur une durée. Cependant, il existe aussi le cas ou nous voudrions envoyer des données à un instant précis : par exemple, pour lancer la lecture d'un média distant.
 Pour ce faire, i-score matérialise la notion d'état instantané dans un élément graphique.
 
@@ -244,20 +244,43 @@ Les états sont situés au début et à la fin de chaque contrainte temporelle. 
 
 Nous avons donc l'ensemble des éléments de base qui composent ce que l'on nomme un scénario : en reliant contraintes, évènements, états, triggers et noeuds temporels nous pouvons déjà définir ces scénarios complexes, mais linéaires.
 
-- Hiérarchie (qu'on a déjà présenté).
+Comme nous l'avions dit plus tôt, il est parfois nécessaire de choisir entre deux vues des états : des instants avec une notion d'unicité temporelle, ou bien un point dans un tableau défini par la granularité du scheduler.
+
+Pour ce faire, l'état va enregistrer plusieurs valeurs : 
+\begin{itemize}
+\item Les valeurs qu'a entré l'utilisateur manuellement à cet instant
+\item Les valeurs des processus précédents
+\item Les valeurs des processus suivants
+\end{itemize}
+
+Ces valeurs peuvent ensuite être prioritisées, et l'utilisateur peut choisir quelles valeurs doivent être synchronisées entre elles en permanence, à la manière d'un système réactif. De même, il est possible de filtrer volontairement sur la répétition d'un même message : on pourrait envoyer ou non le message \verb|/clignote| à un même instant, tout en empêchant de changer plusieurs fois une position à la même valeur. 
+
+
+Les valeurs des processus peuvent être modifiées de l'extérieur par un système de requête - réponse, si cela est supporté par le plug-in de processus.
+
+
+% Note : cas ou on a une synchronisation mais la contrainte parente se termine avant
+
+\section{Hiérarchie}
 À l'aide de la notion de processus, nous pouvons introduire le concept de hiérarchie. La notion de scénario que nous avons présenté peut être placée dans un processus, qui aura comme spécificité d'avoir un noeud temporel de début. Ainsi, son état peut être récupéré récursivement à chaque instant en fonction des appels du parent.
 
 Par défaut, un document est constitué de deux noeuds temporels, et d'une contrainte intermédiaire qui contient un processus Scénario.
 Il aurait été possible d'avoir le cas inverse : l'élément de base aurait pu être un processus scénario dans lequel on commencerait à travailler; cependant avoir une contrainte comme élément parent permet de contrôler la vitesse de lecture globale de manière interne au formalisme. De même, on peut faire "lecture" sur le document en envoyant des messages OSC au noeud temporel de début.
 
-- De même, la boucle est implémentée en terme de processus.
+De même, la boucle est implémentée en terme de processus.
 
-- Précision sur les états
+La notion de processus est utile car elle permet très simplement de faire des copier-coller, des mute, etc.
+
+\section{Arbres d'états}
 Les états se réfèrent la plupart du temps à des périphériques distants : d'autres logiciels compatibles OSC comme Max/MSP ou PureData, ou bien des appareils MIDI.
 
 L'accès se fait via une interface commune, organisée sous forme d'arbre.
 
-En effet, cela permet de représenter simplement les DOM courants.
+
+% Spécifier possibilités de l'interface Device / Node
+
+
+L'avantage d'une organisation en arbre est que cela permet de représenter simplement les DOM courants; la majorité des paramètres ont un rôle purement de données, comme par exemple contrôler le volume d'un son. Mais d'autres peuvent avoir des rôles plus complexes et se comporter comme des fonctions qui pourraient elle-même modifier la structure de l'arbre.
 
 % Mettre capture d'écran d'un objet Qt ?
 
@@ -267,28 +290,66 @@ Les paramètres présents dans cet arbre peuvent ensuite être accédés depuis 
 
 Pour l'instant, ils sont donc organisés sous forme d'état global, à l'image d'une base de données. Cependant nous aimerions évoluer vers un état avec une portée locale, peut-être avec un raffinement au niveau des processus (Processus "LocalScope"). Cela rejoindrait le concept d'unité de données de la programmation structurée.
 
-De plus, le scénario présente lui aussi son propre arbre de paramètres, addressable depuis l'intérieur comme l'extérieur.
+\subsection{Arbre local}
+De plus, le document présente lui aussi son propre arbre de paramètres, addressable depuis l'intérieur comme l'extérieur.
 
-Cela permet notamment de se référer au temps qui s'est écoulé à l'exécution pour s'en reservir dans d'autres contraintes.
+Cela permet notamment de se référer au temps qui s'est écoulé à l'exécution pour s'en reservir dans d'autres contraintes. Ces messages sont addressables depuis le réseau; un loopback est implémenté pour un accès local rapide.
 
 Cela permet par exemple de faire des boucles à durée convergente, des canons, et des systèmes en forme de fractale. % donner exemple
 
+\section{Types de données}
+En plus des types classiques (entiers, flottants, chaines de caractères, tableaux),  nous offrons deux types de donnée spécifiques et relatifs à l'utilisation temporelle qui est faite.
 
--> opérateurs ? et =
+Le premier est =. = est une aide à l'édition : elle n'a de sens que dans l'état à la fin d'une contrainte et signifie : "s'il existe un message à cette addresse au début de la contrainte, alors prends sa valeur".
 
+Le second est ?. ? prend son sens lors de l'exécution, en permettant d'agir en fonction d'une valeur non connue à l'édition du scénario.
+
+Cela permet par exemple de former un état à partir d'évènements qui dépendent de ce qu'il se produit sur scène, pour faire des mappings; par exemple on pourrait mapper le volume audio à la position d'un danseur sur scène à un instant donné.
+
+\section{Transformations et chaînage}
 Perspective : transformations appliquées à une boîte
 
-- Questions de synchronisation d'états (avant / pendant / après)
+\section{Processus modèles de données}
+Maintenant que nous avons présenté les éléments principaux du modèle temporel, il est temps de se concentrer sur des extensions spécialisées adaptées à des cas particuliers de gestion des données.
 
-- Passage de messages pour contrôle interne ou externe
+\subsection{Automations}
+L'élément le plus important de tout séquenceur ou logiciel d'animation est l'automation.
 
-- Automations  
+L'automation permet d'avoir un comportement évolutif dans le temps, la plupart du temps continu.
 
-- Mappings 1D
+L'automation est une fonction qui à un instant associe un état.
 
-- Mappings n-D
+Nous avons essayé de pousser le concept de l'automation au maximum dans i-score.
+
+- Mode par points
+- Discontinuités
+- Interface de segments
+- Modes d'édition inspirés de l'existant
+
+La valeur d'un point dans une automation peut être définie par ? (ou = ?).
+
+Futur : automation de chaînes de caractères ?
+
+\subsection{Mappings simples}
+Les mappings sont une généralisation de l'automation.
+
+Plutôt que d'associer du temps à un état, nous associons un état à un autre état par une fonction de transfert. Cette fonction est aussi une courbe.
+
+Par exemple, on peut associer la position d'un danseur à la couleur rouge d'un projecteur, puis avec une autre contrainte temporelle, l'associer à la couleur bleue.
+
+% Futur : associer [x; y] à [hue; saturation] 
+
+\subsection{Mappings spatiaux}
+
+Les mappings que nous présentons là sont une première partie des possibilités que l'on peut avoir.
+
+Nous aimerions maintenant étendre nos travaux à des zones définies entièrement dans l'espace. Pour ce faire, nous utilisons la puissance complète des mathématiques à l'aide d'une bibliothèque de CAS. Ainsi, nous pouvons définir des zones à partir de notre arbre de paramètres et travailler sur des données spatiales : que se passe-t-il quand deux zones entrent en collision ?
+    
+\subsection{Extensibilité}
 
 - Conclusion : analogue à un petit OS spécialisé pour applications multimédia.
+
+\section{Collaboration et répartition}
 
 \section{Shortcomings (et pistes)}
 \subsection{Debugging}
