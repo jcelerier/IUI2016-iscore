@@ -34,7 +34,9 @@
 % To make various LaTeX processors do the right thing with page size.
 \def\pprw{8.5in}
 \def\pprh{11in}
-\special{papersize=\pprw,\pprh}
+\special{papersize=\pprw,\pprh
+    \subsection{Extensions}
+    - Scripting plug-in}
 \setlength{\paperwidth}{\pprw}
 \setlength{\paperheight}{\pprh}
 \setlength{\pdfpagewidth}{\pprw}
@@ -132,6 +134,7 @@ seconds, if a dancer jumps on the stage, play a sound and increase reverberation
 We will first present the current practices on the field, including the depiction of three specific artistic installations revolving around the idea of a computer-controlled orchestration.
 
 We will then explain the paradigm of the i-score software, which allows to express complex scenarios in a single graphical interface. These scenarios can then be deported or even embedded in other tools thanks to a C++ API. 
+
 \subsection{Motivation}
 The need for authoring software able to operate in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
 
@@ -151,6 +154,10 @@ Flash, Processing, OF, domain-specific software...
 \subsubsection{Flow control models}
  % du tout temporel au tout logique en passant par systèmes réactifs ?
 Max, PureData, React.[...], Integra Live (qui est plutôt orienté son), Unity \& envs de jeu, etc. (revoir slides), Chronic (cf. téléchargements), OpenMusic, Antescofo (et Ascograph), logiciels de la conférence sur appli réactives (cf. slack).
+
+OpenMusic : pas d'exécution.
+
+
 
 \subsubsection{Document models and application description} % bof ici
 CORBA, DBus, DOM HTML, DOM Qt, DOM Jamoma...
@@ -352,12 +359,43 @@ Nous aimerions maintenant étendre nos travaux à des zones définies entièreme
 \section{Collaboration et répartition}
 
 \section{Shortcomings (et pistes)}
-\subsection{Debugging}
-- Getting execution traces
--> How to go at any point in the flow of a software ? The external state might not be correct.
-(Conoundrum of "instant debugging" but requiring for instance a smoke machine to spit smoke for ten minutes)
+Lors du développement d'i-score, nous avons trouvé diverses pistes qui, nous le pensons, peuvent contribuer à 
+faire évoluer le logiciel mais sont encore des problèmes non-résolus.
 
-- Visualisation / simulation du résultat ? 
+\subsection{Debugging}
+Les scénarios fournis dans i-score sont des programmes; une pratique (hélas) nécessaire en programmation est le déboguage. 
+
+Le déboguage permet généralement de comprendre pourquoi un programme n'a pas fonctionné correctement. Heureusement, ici, nous n'avons pas de problèmes de gestion de mémoire, ou de pointeurs comme dans des langages  bas-niveau comme le C. Néanmoins, dès que la logique du spectacle devient complexe, il est utile de pouvoir comprendre qu'est-ce qui se passe mal.
+
+\paragraph{Time Scrub}
+Le premier outil est le time scrub : il permet de se déplacer dans le temps et d'exécuter un élément sans repartir du début. Un problème évident se pose dès que de l'indéterminisme est introduit dans le scénario : comment gérer deux conditions exclusives par exemple ? Des outils simples et linéaires n'ont pas ce problème et peuvent scrubber à tout instant.
+
+Plusieurs possibilités s'ouvrent alors :
+\begin{itemize}
+    \item Définir des "chemins" par défaut qui doivent être empruntés lors de l'évaluation.
+    \item Choisir avant chaque exécution comment chaque condition doit s'exécuter.
+    \item Tout ignorer et ne lire qu'en considérant une contrainte.
+\end{itemize}
+
+De plus, un problème de déboguage lié aux contraintes temporelles se pose : jusqu'à présent, nous les avons présentées comme un moyen de définir une contrainte lors de l'exécution d'un scénario. Par exemple, dans le cas d'une machine à fumée, nous pouvons spécifier 10 secondes de préchauffage avant de commencer à envoyer la fumée. Dans certains cas, ne pas respecter le temps de préchauffage peut endommager le matériel, il est donc très important de le réaliser à chaque fois.
+
+Cependant, si l'on autorise le déboguage à démarrer à partir de n'importe quel instant, il est possible de détruire le matériel par inadvertance, ce qui n'est pas désiré. Il est donc nécessaire de trouver un moyen de spécifier des contraintes "absolues" ou "nécessaires", possiblement en lisant un paramère qui indique l'état de préchauffe actuelle et lance une contrainte de préchauffage si l'état n'est pas apte à lancer la suite. Cela se rapproche des outils de scripting qui existent par exemple dans gdb.
+
+\paragraph{Visualisation de l'exécution}
+Mode simple : on affiche le déroulement du temps.
+
+Mode avancé : les contraintes vont se déplacer dans le temps depuis le début de leur intervalle souple jusqu'à leur fin.
+
+\paragraph{Traces d'exécution}
+Enfin, il peut être utile d'obtenir des traces d'exécution après performance. Cela a un intérêt supplémentaire par rapport à une trace d'exécution d'un logiciel standard : par exemple, si la performance était mauvaise et incluait des danseurs, ils peuvent rejouer l'exécution telle qu'elle s'est passée pour comprendre qu'est-ce qui a posé problème. De même, une très bonne performance pourra être réutilisée par la suite si par exemple le spectacle doit être reproduit dans de moins bonnes conditions (par exemple si un des acteurs ne peut être présent).
+
+Il devrait être possible de synchroniser dans une certaine mesure les traces d'exécution avec le document original : ainsi, si une durée est changée dans le document principal, cela peut être répercuté dans les traces, pour garder les conditions qui se sont / ne se sont pas exécutées.
+
+%\paragraph{Simulation d'environnements}
+%- Visualisation / simulation du résultat ? 
+
+\subsection{Extensions}
+- Scripting plug-in
 
 \section{Evaluation}
 - Time to develop artistic installations greatly reduced.
