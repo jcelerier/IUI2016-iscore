@@ -14,15 +14,19 @@
 
 % Arabic page numbers for submission. 
 % Remove this line to eliminate page numbers for the camera ready copy
-% \pagenumbering{arabic}
+ \pagenumbering{arabic}
 
 
 % Load basic packages
+%\usepackage{biblatex}
 \usepackage{balance}  % to better equalize the last page
 \usepackage{graphics} % for EPS, load graphicx instead
 \usepackage{times}    % comment if you want LaTeX's default font
 \usepackage{url}      % llt: nicely formatted URLs
 \usepackage{listings}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
 % llt: Define a global style for URLs, rather that the default one
 \makeatletter
 \def\url@leostyle{%
@@ -34,9 +38,7 @@
 % To make various LaTeX processors do the right thing with page size.
 \def\pprw{8.5in}
 \def\pprh{11in}
-\special{papersize=\pprw,\pprh
-    \subsection{Extensions}
-    - Scripting plug-in}
+\special{papersize=\pprw,\pprh}
 \setlength{\paperwidth}{\pprw}
 \setlength{\paperheight}{\pprh}
 \setlength{\pdfpagewidth}{\pprw}
@@ -133,7 +135,7 @@ seconds, if a dancer jumps on the stage, play a sound and increase reverberation
 
 We will first present the current practices on the field, including the depiction of three specific artistic installations revolving around the idea of a computer-controlled orchestration.
 
-We will then explain the paradigm of the i-score software, which allows to express complex scenarios in a single graphical interface. These scenarios can then be deported or even embedded in other tools thanks to a C++ API. 
+We will then explain the paradigm of the i-score software, which allows to express complex scenarios in a single graphical interface. These scenarios involve both temporal logic and structured programming. They can afterwards be deported or even embedded in other tools thanks to a C++ API. 
 
 \subsection{Motivation}
 The need for authoring software able to operate in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
@@ -142,21 +144,78 @@ The need for authoring software able to operate in both the temporal and logical
 To explain properly the kind of artistic demeanors we are working with, there will be three case studies.
 
 \paragraph{The Drop}
-\paragraph{Stockhausen, Klavierstucke XI}
+\paragraph{Klavierstücke XI}
+This is a music piece composed in 1957 by Karlheinz Stockhausen.
+
+The interpretation plays a huge part on the piece. It is composed of multiple "segments", a bit longer than musical bars.
+
+The performer starts with one of the segments. When he finishes playing a segment, he chooses another randomly. When he wants to choose a segment that he has already played two times, the music stop.
+
+Hence,  each interpretation is potentially unique.
+
+We can model this programmatically quite easily by maintaining counters for each segment, incrementing the counter when it is played, and having a loop whose looping condition is "no counter is > 2".
+% Dire que pour i-score il manque juste la possibilité de créer des données à la volées. Note : pourquoi ne pas simplement ajouter un noeud dans l'arbre lorsqu'il est accédé la première fois (s'il est dans le device local.)
+
 \paragraph{The Runner}
-This is an actual museum installation that is located in the Futuroscope, at the city of Poitiers in France.
+This is an actual museum installation that is located in the Futuroscope, at the city of Poitiers in France. The goal is for children to test their running speed and compare themselves against a leaderboard of the best runners that took the attraction. It is based around two presence detectors, one at the beginning and one at the end of the running lane. However, there is some complexity involved to prevent the children from cheating, for instance by having one of their friends trigger the "finish line" sensor just after they triggered the start sensor. Timeouts are also necessary if a participant starts running but decides to never finish, not triggering the end sensor.
+
+Precisely, the installation can be explained as follows : 
+\begin{itemize}
+    \item A "welcome" loop that displays a looping video and waits for an interaction.
+    \item A main running loop, that starts after the triggering of the start sensor. It begins with a fixed duration announce video that goes "3.. 2.. 1..". While the child runs, there is another video and some music playing. 
+    
+    If the final sensor is triggered before 5 seconds, it is considered cheating and we break out of the main loop.
+    
+    If the final sensor is not triggered after 30 seconds, the race is considered abandonnée. 
+    
+    \item If the main loop does not leave in the "erroring" states, there is a standard finish video that lasts 5 seconds and shows the position of the current run in the podium. After a few seconds, we return to the welcome loop.
+    
+    \item Overarching all this, there is a topmost loop that regularly checks if the installation is correctly networked with the museum backend. If it's not the case, everything is stopped and a generic "Please call a technician" message is shown.
+\end{itemize}
+
+Currently, the whole logic is implemented in Max/MSP.
+% Dire que pour i-score il manque juste la possibilité de gérer des "sorties" à tout instant.
 
 \subsection{Existing approaches}
+Now that we have exposed the kind of problems that we are tackling, we are going to review the existing methods that have been and are still used to conceive and run interactive applications.
 
-\subsubsection{Content creation}
+There are mostly three parts : first, the cue-based tools. This is a broad range which can go from extremely specialized software that would for instance only handle video, to more generic solutions that aim to control different kinds of media.
+
+Then, the text-based programming tools. These are programming languages that are dedicated to the task of building interesting interactive applications and their user interfaces.
+
+Then, there are specific flow-control models. i-score fits into this category.
+
+In addition, we will have an overview of document object model paradigms. This is to present the kind of software that i-score is expected to control. % Peut-être mettre ça ailleurs, plus loin ?
+
+\subsubsection{Cue-based environments}
+This is the first kind of environment for content creation, and certainly one of the most used for shows, because it mimics the behaviour of real hardware such as lighting consoles.
+
+A cue is a set of data that maps to a certain state on stage. For instance, there would be a cue for the beginning of a new scene in a pièce de théâtre.
+
+In this kind of environment, there are generally only "before" and "after" temporal relationships : the cue are organized in stacks that follow the development of the show. A human is generally present to trigger the correct cues at the correct time, and adjusts if something goes wrong on stage.
+
+An example of cue-based system for show control is given by Kim Youngjae in~\cite{kim_unified_2013}.
+% Analogue à Ableton Live en mode vertical.
+% Citer l'article coréen et les autres environements de média (MEDIALON, Modulo PI, etc..), 
+
+\subsubsection{Programming-based environments}
 Flash, Processing, OF, domain-specific software...
 
 \subsubsection{Flow control models}
+
+* First present the raw time models, as well as the formal models for i-score
+
+* Then present more advanced software / toolkits
+
+
  % du tout temporel au tout logique en passant par systèmes réactifs ?
 Max, PureData, React.[...], Integra Live (qui est plutôt orienté son), Unity \& envs de jeu, etc. (revoir slides), Chronic (cf. téléchargements), OpenMusic, Antescofo (et Ascograph), logiciels de la conférence sur appli réactives (cf. slack).
 
 OpenMusic : pas d'exécution.
 
+MEF++\cite{ackermann_direct_1994} : framework pour applications interactives.
+
+Temps souple\cite{song_interactive_1999}
 
 
 \subsubsection{Document models and application description} % bof ici
@@ -403,5 +462,8 @@ Il devrait être possible de synchroniser dans une certaine mesure les traces d'
 \section{Conclusion}
 %% Logiciel ouvert et utilisable (API C++)
 %% Perspectives : autres implémentations (FPGA, kdbus, modèle de calcul ?)
+
+\bibliographystyle{SIGCHI-Reference-Format}
+\bibliography{base}
 
 \end{document}
