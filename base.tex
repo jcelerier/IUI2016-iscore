@@ -27,6 +27,8 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
+
+\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
 % llt: Define a global style for URLs, rather that the default one
 \makeatletter
 \def\url@leostyle{%
@@ -173,7 +175,13 @@ Precisely, the installation can be explained as follows :
     \item Overarching all this, there is a topmost loop that regularly checks if the installation is correctly networked with the museum backend. If it's not the case, everything is stopped and a generic "Please call a technician" message is shown.
 \end{itemize}
 
-Currently, the whole logic is implemented in Max/MSP.
+Currently, the whole logic is implemented in Max/MSP. A picture can be seen in fig.~\ref{fig.futuroscope}.
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.6]{images/futuroscope.jpg}
+    \caption{The Runner installation. \tiny{©JL AUDY/FUTUROSCOPE}}
+\end{figure}
 % Dire que pour i-score il manque juste la possibilité de gérer des "sorties" à tout instant.
 
 \subsection{Existing approaches}
@@ -190,16 +198,59 @@ In addition, we will have an overview of document object model paradigms. This i
 \subsubsection{Cue-based environments}
 This is the first kind of environment for content creation, and certainly one of the most used for shows, because it mimics the behaviour of real hardware such as lighting consoles.
 
-A cue is a set of data that maps to a certain state on stage. For instance, there would be a cue for the beginning of a new scene in a pièce de théâtre.
+A cue is a set of data that maps to a certain state on stage. For instance, there would be a cue for the beginning of a new scene in a pièce de théâtre, that would set the lights in the correct positions and colors, and start playing a background music.
 
-In this kind of environment, there are generally only "before" and "after" temporal relationships : the cue are organized in stacks that follow the development of the show. A human is generally present to trigger the correct cues at the correct time, and adjusts if something goes wrong on stage.
+In this kind of environment, there is no manifest temporal relationships to speak of: the cue are organized in stacks that will generally follow the expected development of the show. A human is generally present to trigger the correct cues at the correct time, and adjusts if something goes wrong on stage.
 
-An example of cue-based system for show control is given by Kim Youngjae in~\cite{kim_unified_2013}.
-% Analogue à Ableton Live en mode vertical.
-% Citer l'article coréen et les autres environements de média (MEDIALON, Modulo PI, etc..), 
+An example of cue-based system for show control is given by Kim Youngjae in~\cite{kim_unified_2013}. 
+
+This is also similar to the session view of Ableton Live, with stacks of audio clips that are to be triggered by the performer. Modulo Pi is another hardware and software facility that works with video cues.
+
+These environments, overall, allow to set-up a show very easily - sometimes dragging and dropping the desired cues will be enough. But as soon as there is interactivity involved, this paradigm becomes useless : there is absolutely no flexibility apart from the one provided by a human operator, which may become overwhelmed if too much things happen on stage at the same time.
 
 \subsubsection{Programming-based environments}
-Flash, Processing, OF, domain-specific software...
+At the other range of capabilities lies the full-blown programming languages. They allow complete flexibility over what's happenning. However, very few artists are eager to learn how to program in order to write interactive show; besides, when the show relies heavily on temporal elements, the textual structuration doesn't make the flow of the program easy to understand, as can be seen in fig.~\ref{fig.hardtofollow}.
+
+\begin{figure}
+\label{fig.hardtofollow}
+\begin{lstlisting}[language=c++]
+GlobalState state;
+
+void light1()
+{
+  state.at("/light/r").set(255);
+  usleep(200000);    
+  state.at("/light/r").set(0);
+  for(int i = 0; i < 100; i++)
+  {
+    if(state.at("/sound/volume") > 50)
+      state.at("/light/g").set(i);        
+    state.at("/light/b").set(255 - i);
+    usleep(32000);
+  }
+}
+
+void scenario()
+{
+  state.at("/sound").set(true);
+  light1();
+  usleep(10000);
+  light1();
+}
+\end{lstlisting}
+\caption{A trivial light-changing program. However, the lack of cohesion between the code's organization and the temporal behaviour makes the development of the scenario hard to visualize. Time, logic and data are highly coupled, which makes it even harder to follow.}
+\end{figure}
+
+The programmer also needs to keep track of the available data and devices that he can access; this is commonly achieved by using god objects that represent the external devices's state or something akin to haskell's World State concept. Else, a state-keeping object has to be passed across most of the method and function calls, which incurs a certain cost on the complexity of such software. Another common problematic is the method used to represent external devices. Some libraries will rather try to implement everything with the language's primitives and structures. Hence, an address of a device would be represented by a tree-like structure. Other would take an approach closer to a domain-specific language, by specifying the addresses in textual format that are to be parsed behind the scene. 
+
+Besides, another problem is reusability : most of the interactive applications are to be used once and then discarded since they are most of the time very different. Libraries exist, but even then they are generally customized by the final application author. Hence, any system wishing to improve on the current state of affairs would have to provide easy-to-use library facilities.
+
+Finally, the standard primitive for parallelization, threads, is highly unpractical to use because of the indeterminism of the operating system's scheduler. Other programming paradigms, like reactive programming, offers better tools to solve this problem.
+
+For instance, one can write such software with ActionScript (part of the Adobe Flash environment), Processing (a set of multimedia libraries based on Java) and OpenFrameworks, which is to C++ what Processing is to Java\cite{noble2009programming}. These languages or frameworks are general-purpose, but contain a lot of multimedia-oriented tools, to playback and modify video, or create particle systems. 
+
+Some domains have more specific tools : for instance, the LISP community has produced a wealth of languages able to represent interactive music (source).
+
 
 \subsubsection{Flow control models}
 
@@ -241,6 +292,9 @@ we must allow it to represent a range, or span of time. For instance, a time con
 Then, we introduce a mean to synchronize multiple time constraints : a time node. 
 
 This allows multiple time constraints to exist both serially, and in parallel. 
+
+avec tout ça je devrais pourvoir m’en sortir ! merci.
+du coup je m’y colle en début de semaine prochaine et on pourrait se réunir le jeudi 22 ou vendredi 23 à paris ?
 
 
 \subsection{Structured temporal programming}
