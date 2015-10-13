@@ -27,6 +27,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
+\usepackage{subcaption}
 
 \lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
 % llt: Define a global style for URLs, rather that the default one
@@ -178,6 +179,7 @@ Precisely, the installation can be explained as follows :
 Currently, the whole logic is implemented in Max/MSP. A picture can be seen in fig.~\ref{fig.futuroscope}.
 
 \begin{figure}
+	\label{fig.futuroscope}
     \centering
     \includegraphics[scale=0.6]{images/futuroscope.jpg}
     \caption{The Runner installation. \tiny{©JL AUDY/FUTUROSCOPE}}
@@ -191,7 +193,7 @@ There are mostly three parts : first, the cue-based tools. This is a broad range
 
 Then, the text-based programming tools. These are programming languages that are dedicated to the task of building interesting interactive applications and their user interfaces.
 
-Then, there are specific flow-control models. i-score fits into this category.
+Finally, there are specific flow-control models; they are between both axes. i-score fits into this category.
 
 In addition, we will have an overview of document object model paradigms. This is to present the kind of software that i-score is expected to control. % Peut-être mettre ça ailleurs, plus loin ?
 
@@ -204,7 +206,7 @@ In this kind of environment, there is no manifest temporal relationships to spea
 
 An example of cue-based system for show control is given by Kim Youngjae in~\cite{kim_unified_2013}. 
 
-This is also similar to the session view of Ableton Live, with stacks of audio clips that are to be triggered by the performer. Modulo Pi is another hardware and software facility that works with video cues.
+This is also similar to the session view of Ableton Live, with stacks of audio clips that are to be triggered by the performer. The timeline view of Live, however, does not enable interactivity. Modulo Pi is another hardware and software facility that works with video cues.
 
 These environments, overall, allow to set-up a show very easily - sometimes dragging and dropping the desired cues will be enough. But as soon as there is interactivity involved, this paradigm becomes useless : there is absolutely no flexibility apart from the one provided by a human operator, which may become overwhelmed if too much things happen on stage at the same time.
 
@@ -245,11 +247,11 @@ The programmer also needs to keep track of the available data and devices that h
 
 Besides, another problem is reusability : most of the interactive applications are to be used once and then discarded since they are most of the time very different. Libraries exist, but even then they are generally customized by the final application author. Hence, any system wishing to improve on the current state of affairs would have to provide easy-to-use library facilities.
 
-Finally, the standard primitive for parallelization, threads, is highly unpractical to use because of the indeterminism of the operating system's scheduler. Other programming paradigms, like reactive programming, offers better tools to solve this problem.
+Finally, the standard primitive for parallelization, threads, is highly unpractical to use because of the indeterminism of the operating system's scheduler. Other programming paradigms, like reactive programming, offers better tools to solve the problem of the control of multiple kinds of data at the same time; however it becomes harder to have a scenario split into multiple, unrelated parts. % source
 
 For instance, one can write such software with ActionScript (part of the Adobe Flash environment), Processing (a set of multimedia libraries based on Java) and OpenFrameworks, which is to C++ what Processing is to Java\cite{noble2009programming}. These languages or frameworks are general-purpose, but contain a lot of multimedia-oriented tools, to playback and modify video, or create particle systems. 
 
-Some domains have more specific tools : for instance, the LISP community has produced a wealth of languages able to represent interactive music (source).
+Some domains have more specific tools : for instance, the LISP community has produced a wealth of languages able to represent interactive music  % source.
 
 
 \subsubsection{Flow control models}
@@ -284,51 +286,92 @@ Allen's relationships and moving on to NTCCs, Petri nets, finite automatons, and
 \subsection{Specification of temporal relationships}\label{sec.temporal}
 The first required primitive is the one able to depict a duration.
 
-We shall call it a time constraint.
-
+We shall call it a \textit{time constraint}.
 The time constraint is not necessarily a fixed duration : to allow for interactiveness, 
-we must allow it to represent a range, or span of time. For instance, a time constraint may last between 3 and 5 seconds.
+we must allow it to represent a range, or span of time. For instance, a time constraint may last between 3 and 5 seconds. The maximum can be infinite, to allow for permanent appliances running in a loop.
 
-Then, we introduce a mean to synchronize multiple time constraints : a time node. 
+Then, we introduce a mean to synchronize multiple time constraints : a \textit{time node}. 
+This allows multiple time constraints to exist both serially, and in parallel, as can be seen in fig.~\ref{fig.cst.timenode}. 
+As a byproduct, this allows a clean, graphical separation of concerns while still allowing the author to position related elements close to each other. % Parler du pb avec la verticalité.
 
-This allows multiple time constraints to exist both serially, and in parallel. 
-
-avec tout ça je devrais pourvoir m’en sortir ! merci.
-du coup je m’y colle en début de semaine prochaine et on pourrait se réunir le jeudi 22 ou vendredi 23 à paris ?
-
+Finally, we can assess than constraints also have a logical role, which is of "saying what's next" : a time node will be triggered only after the previous constraints have finished.
+\begin{figure}
+	\centering
+	\begin{minipage}[b]{.5\linewidth}
+		\centering
+		\includegraphics[scale=0.5]{images/timenode.png}
+		\subcaption{Time constraints (horizontal),\\ and a time node (vertical)}
+	\end{minipage}\begin{minipage}[b]{.5\linewidth}
+		\centering
+		\includegraphics[scale=0.5]{images/souple.png}
+		\subcaption{A time constraint with min and max duration}
+	\end{minipage}	
+	
+	\caption{Temporal elements of the model}
+	\label{fig.cst.timenode}
+\end{figure}	
 
 \subsection{Structured temporal programming}
-Maintenant que nous avons des primitives permettant de décrire l'écoulement du temps, nous introduisons les éléments s'apparentant à la programmation structurée.
+After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
+The first element is the condition. For instance, we would like to say : "this temporal constraint will be played only if a given parameter has reached a value of 5".
+Hence, this is something that is at a lower level than classic if-then-else constructs; however we can rebuild them afterwards.
+Due to the presence of temporal logic, there are actually two kinds of conditions in i-score : 
+\begin{itemize}
+	\item The purely logical conditions; they cannot modify the flow of time, only be true or false. What matters is their value when they are being evaluated, which will cause the following constraints to be executed - or not. We call these \textit{time events}; visual depiction is in fig.~\ref{fig.logical.events}.
+	\item The time-flow controlling conditions. These have more power : they can trigger the execution of a whole time node when they become true. This is why some time constraint will have a minimum and a maximum : the combined min and max of all constraints ending on a given time node will collapse into its execution interval. This interval can be defined at run time in some cases %(cite).
+	We call these \textit{triggers}; visual depiction is in fig.~\ref{fig.logical.trigger}.
+\end{itemize}
 
-La base est la conditionnelle. Dans notre cas, nous aimerions dire : cette contrainte temporelle ne s'exécute que si tel paramètre a atteint cette valeur.
+\begin{figure}
+	\centering
+	\begin{minipage}[b]{.5\linewidth}
+		\centering
+		\includegraphics[scale=0.5]{images/events.png}
+		\subcaption{Two synchronized events~\\(vertical, bold)}
+		\label{fig.logical.events}
+	\end{minipage}\begin{minipage}[b]{.5\linewidth}
+	\centering
+	\includegraphics[scale=0.5]{images/trigger.png}
+	\subcaption{A trigger (on top)}
+	\label{fig.logical.trigger}
+    \end{minipage}	
 
-Du fait de la présence de logique temporelle, il y a deux cas de conditions : 
-- Les conditions qui ne prennent pas le temps en compte. Elles sont vraies ou fausses, et la chose qui compte est leur valeur au moment ou elles seront évaluées. Elles n'ont d'influence que sur le futur.
-- Les conditions qui contrôlent le flot du temps. Elles ont le pouvoir de déclencher des intervalles lorsqu'elles passent à vrai. C'est pour cela que nous avons besoin d'avoir un minimum et un maximum à nos contraintes temporelles. Elles ont donc aussi une influence sur des contraintes temporelles précédentes : on dirait par exemple : "cette contrainte dure *jusqu'à ce que la condition soit vraie". On peut ainsi faire durer une contrainte à l'infini en mettant une condition "faux". Ceci permet d'écrire des applications avec un fonctionnement "moteur", qui ne sont pas sensées s'arrêter.
+\caption{Logical elements of the model}
+\label{fig.logical}
+\end{figure}	
 
-Nous séparons ces deux cas en deux éléments de syntaxe de notre langage : l'évènement pour le premier, et le trigger pour le second.
+Triggers have a lot of influence : once they become true, they will stop all the previous constraints of their time node, evaluate all the time events and start the constraints that follow time events that were true. The default behaviour is that a trigger is also triggered if the maximum duration is reached.
 
-Les deux font interface entre les contraintes et les noeuds temporels.
+From there, we can start thinking about the implementation of loops. Most people used to audio production software would see loops as the repetition of a simple pattern that lasts a given amount of time. This is in stark contrast with the structured programming loop, where each iteration can yield completely different apparent results.
 
-À partir de là, nous pouvons considérer la notion de boucle. Pour cela, il est nécessaire de bien clarifier la séparation entre les données spécifiées par l'auteur, et le résultat de l'exécution.
+To allow to do this graphically, we must separate clearly the pattern that the author specified and the result of the execution, which might show this pattern, each time changed a bit, multiple times.
 
-Quand un auteur ou programmeur spécifie une boucle, il décrit un motif général qui est voué à être répété. Cependant, à chaque itération des cas différents peuvent arriver : 
+It shall also be noted that when we presented the time nodes and time constraints, we did not mention any explicit restrictions on the nodes that should be before and after a constraint; it can actually be the same. Once the constraint has been read, it triggers the end timenode, which restarts the reading of the constraint. If we put a trigger and minimums \& maximums to our constraint, we can then have loops with iterations of variable durations according to what's occuring on stage.
 
-\begin{lstlisting}
-while t < 100
-  if a
-    [...] short iteration [...]
-  else
-    [...] long iteration [...]           
-\end{lstlisting}
-
-Dans notre cas, nous avons donc besoin d'une contrainte souple pour pouvoir avoir des boucles intéressantes. 
-
-On décrit donc la boucle comme une paire (noeud temporel, contrainte). La contrainte est des deux côtés du noeud temporel : une fois qu'elle a été lue, elle peut être re-lue depuis le début, sachant que l'on progresse dans l'écoulement du temps.
-
+\begin{figure}
+	\centering
+	\begin{lstlisting}
+	while t < 100
+	if a
+	[...] short iteration [...]
+	else
+	[...] long iteration [...]           
+	\end{lstlisting}
+	\caption{A basic loop}	
+	\label{fig.loopcode}
+\end{figure}
 
 \section{From structure to content}
-Maintenant que nous avons établi l'intégralité des éléments nécessaires à une structuration logique et temporelle, nous nous intéressons aux données.
+Now that we have established the entirety of the elements necessary for logical and temporal structuring of scenarios, we shall study how data is handled in the system.
+As it could be seen in section~\ref{sec.temporal}, we have two temporal primitives : one that manages durations, and another that manages synchronization.
+
+There are two point of views with regards to the handling of data in the system.
+
+\begin{itemize}
+	\item The first is that the flow of time is a continuum; an instant does not have a real existence and it can only be approached like an irrational number would be.
+	This allows simple temporal reasoning : the author can without a doubt say "B follows A" (in the Allen meaning) and know what the state will be at the intersection of both.
+	\item The second is that sometimes, a raw, low-level access to the data that will be scheduled is necessary in order to facilitate work. For instance, in audio sof  
+\end{itemize}
 
 Comme cela a pu être vu en section~\ref{sec.temporal}, nous possédons deux primitives temporelles : une pour les durées et une pour les instants.
 
