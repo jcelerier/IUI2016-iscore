@@ -311,7 +311,10 @@ Finally, we can assess than constraints also have a logical role, which is of "s
 	\label{fig.cst.timenode}
 \end{figure}	
 
-\subsection{Structured temporal programming}
+% Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
+
+
+\subsection{Structured temporal programming}\label{sec.structured}
 After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
 The first element is the condition. For instance, we would like to say : "this temporal constraint will be played only if a given parameter has reached a value of 5".
 Hence, this is something that is at a lower level than classic if-then-else constructs; however we can rebuild them afterwards.
@@ -361,65 +364,91 @@ It shall also be noted that when we presented the time nodes and time constraint
 	\label{fig.loopcode}
 \end{figure}
 
+% TODO ifthenelse
 \section{From structure to content}
 Now that we have established the entirety of the elements necessary for logical and temporal structuring of scenarios, we shall study how data is handled in the system.
 As it could be seen in section~\ref{sec.temporal}, we have two temporal primitives : one that manages durations, and another that manages synchronization.
 
-There are two point of views with regards to the handling of data in the system.
+The kind of data with which i-score is currently the most used is the OSC message, which maps an address in the format "/an/address/here" to a value. Multiple messages together form a state, which is analogous to a cue.
+
+\subsection{Processes}
+To encapsulate data that is meant to last for some amount of time, we build the notion of the process. This is not without similarities with traditional operating system processes, albeit much simpler since they can be made in a purely functional way.
+
+Processes are located in time constraints; a constraint can hold any number of processes.
+
+The interface of a process (fig.~\ref{fig.processInterface}) is trivial and allows for a lot of cases common in show-control. The constraint's execution semantics act like a playhead : there is a clock which ticks; on each tick the process's state is pumped. However, it is possible to parametrize what happens with the start and end states which act like parameters to the process. 
+
+Hence, on a purely data-oriented point of view, a process can be seen as a succession of states. However this level of abstraction would be hard to manipulate directly by the authors, especially for automations. We should also note that the state needs not to be known at the moment of writing : one could write a process that returns a random value for each state for instance, or even have processes run their own clock.
+
+% TODO évaluer différences entre "process qui envoie les messages" et "contrainte qui pull"
+
+By default, a process lasts for as long as its parent constraint. But it is important to keep in mind that since a constraint has a minimal and maximal duration, it would be impossible to have interpolations since you would have to know when the ending has happened to be able to interpolate. 
+
+However, the formalism enables us to have a clean way to give a duration to each process, which will presented in section~\ref{sec.hierarchy}.
+
+\begin{figure}
+	\centering
+\begin{lstlisting}
+    interface Process {
+       State state(Time);
+       State& startState();
+       State& endState();
+    }
+\end{lstlisting}
+\caption{Basic interface of a process}
+\label{fig.processInterface}
+\end{figure}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{images/processes.png}
+	\label{fig.processes}
+	\caption{Processes in constraints}
+\end{figure}
+
+
+\subsection{States}
+The process have a meaning with regard to durations. However, another common necessity is sending cues at a precise time. For instance, while the position of a lightspot should be interpolated during a few hundred milliseconds to prevent breakage, stopping a music player should be a single message.
+
+In order to achieve this, i-score materializes the notion of instantaneous \textit{state} in a graphical syntax element.
+
+The states are located at the beginning and the end of each temporal constraint. This allows the creation of interpolations between two parameters very easily, by taking a snapshot of a first state, modifying the remote value on the actual device to get a visual feedback and snapshotting again. 
+
+Since states are at both extremities of a time constraint, they happen on a time node. As we saw earlier, a time node represents an instantaneous point in time. 
+There are two point of views with regards to the handling of instantaneous data in the system.
 
 \begin{itemize}
 	\item The first is that the flow of time is a continuum; an instant does not have a real existence and it can only be approached like an irrational number would be.
 	This allows simple temporal reasoning : the author can without a doubt say "B follows A" (in the Allen meaning) and know what the state will be at the intersection of both.
-	\item The second is that sometimes, a raw, low-level access to the data that will be scheduled is necessary in order to facilitate work. For instance, in audio sof  
+	\item The second is that sometimes, a raw, low-level access to the data that will be scheduled is necessary in order to facilitate work. For instance, in audio software, sometimes sample access is required.   
 \end{itemize}
+As for audio data, it is sometimes necessary to have a precise access to the behaviour that will take place when there are conflictual data for the same instant. % Note : différent de l'audio car là on a une notion d'unicité avec les timenodes)
 
-Comme cela a pu être vu en section~\ref{sec.temporal}, nous possédons deux primitives temporelles : une pour les durées et une pour les instants.
+This case happens with curves. For instance, if we have two constraints following each other, with curves on the same parameter, we are tempted to say that since the time node represents an instant in time, there should be no difference between the end of the first curve and the beginning of the second. However, sometimes it is practical to have two curves following each other but not at the same value; for instance, this would happen with loops. Since we loop around a single time node, as per section~\ref{sec.structured}, this would enforce having the beginning of the curve equal to the end of the curve, which would not be really practical.
 
-Il y a deux points de vue possibles : le premier est que le temps doit être traité comme un continuum : un instant n'a pas d'existence propre et on ne peut que l'approcher comme on approcherait un élément dans un ensemble dense. Ceci permet de raisonner simplement sur des problématiques de positionnement d'éléments par rapport au temps.
+Hence, the user has to specify what value he actually wants to be sent when there is a manifest discrepancy between a logical instant in the scenario, and a physical instant, whose granularity is its of the scheduler, be it the sound card's clock or the network message's clock.
 
-Néanmoins, il est parfois utile de briser l'abstraction et d'obtenir le contrôle bas niveau : dans des logiciels audio, c'est par exemple le cas de l'accès à la sample.
+The different possibilities would be keeping a single value, having some behaviour that would involve taking the mean of all the values, or sending each value one after the other.
 
-Le type de données avec lequel i-score est le plus utilisé est le message OSC. Là aussi, il est nécessaire d'avoir un accès précis au comportement qui s'applique lorsque par exemple, deux courbes se suivent et portent sur la même adresse sans que la fin de la première courbe ait la même valeur que le début de la suivante. Veut-on privilégier une valeur ? Utiliser les deux ? L'utilisateur doit avoir le choix de la valeur envoyée lorsqu'il y a une discrepancy manifeste entre un instant logique dans le scénario, et un instant physique, ordonné par l'horloge d'une carte son ou du cpu.
-
-Dans le logiciel, le type de données que nous manipulons le plus est donc le message, qui associe une valeur à une addresse. Plusieurs messages regroupés forment un état, par analogie avec les cues.
-
-\subsection{Processes}
-Pour encapsuler ces données, dans le cadre d'une durée nous choisissons principalement la métaphore du processus. Une contrainte peut contenir un nombre arbitraire de processus; l'interface d'un processus est très simple et permet de décrire des cas complexes. Elle est analogue à un système de passage de messages.
-
-\begin{lstlisting}
-    interface Process {
-       State state(Time)
-    }
-\end{lstlisting}
-
-Cela permet à la contrainte de fonctionner de la même manière qu'une tête de lecture : une horloge va envoyer des ticks; à chaque tick le processus doit renvoyer son état. Ce fonctionnement semble fonctionnel pur mais rien n'empêche d'avoir des effets de bord / sauvegarder un état.
-Sur un plan théorique (et au niveau de l'exécution) un processus peut être vu comme une succession d'états, néanmoins ce serait une abstraction difficile à manier pour l'auteur, notamment en ce qui concerne les automations.
-
-Il convient donc de noter que les processus peuvent s'arrêter avant leur fin apparente, si par exemple il y a un trigger sur la fin de la contrainte.
-
-Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
-
-\subsection{States}
-Les processus ont un sens sur une durée. Cependant, il existe aussi le cas ou nous voudrions envoyer des données à un instant précis : par exemple, pour lancer la lecture d'un média distant.
-Pour ce faire, i-score matérialise la notion d'état instantané dans un élément graphique.
-
-Les états sont situés au début et à la fin de chaque contrainte temporelle. Cela permet de spécifier très simplement des interpolations entre deux paramètres, en prenant une capture d'un premier état puis d'un second.
-
-Nous avons donc l'ensemble des éléments de base qui composent ce que l'on nomme un scénario : en reliant contraintes, évènements, états, triggers et noeuds temporels nous pouvons déjà définir ces scénarios complexes, mais linéaires.
-
-Comme nous l'avions dit plus tôt, il est parfois nécessaire de choisir entre deux vues des états : des instants avec une notion d'unicité temporelle, ou bien un point dans un tableau défini par la granularité du scheduler.
-
-Pour ce faire, l'état va enregistrer plusieurs valeurs : 
+In order to achieve this, the state is going to save multiple values : 
 \begin{itemize}
-\item Les valeurs qu'a entré l'utilisateur manuellement à cet instant
-\item Les valeurs des processus précédents
-\item Les valeurs des processus suivants
+	\item The values that the user has entered manually.
+	\item The values of the previous processes.
+	\item The values of the following processes.
 \end{itemize}
 
-Ces valeurs peuvent ensuite être prioritisées, et l'utilisateur peut choisir quelles valeurs doivent être synchronisées entre elles en permanence, à la manière d'un système réactif. De même, il est possible de filtrer volontairement sur la répétition d'un même message : on pourrait envoyer ou non le message \verb|/clignote| à un même instant, tout en empêchant de changer plusieurs fois une position à la même valeur. 
+These values can then be priorized and merged according to arbitrary rules. The user is then able to choose which values are to be synchronized and which ones should be considered independent.
+It is also possible to set a filter on the repetition of a given message. For instance, if should happen that a message "/play" was sent to a video player twice in a few milliseconds, the second message could be ignored. This is however done at the adress level, not at the scenario level. The effect can be seen on figure \ref{fig.curvesync}. % Mettre ailleurs
 
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.2]{images/curvesync.png}
+	\caption{Curves being synchronized on a state. When the user moves either side of the state, the other side will move accordingly}
+	\label{fig.curvesync}
+\end{figure}
 
-Les valeurs des processus peuvent être modifiées de l'extérieur par un système de requête - réponse, si cela est supporté par le plug-in de processus.
+However, not all process shall change value. For instance, somebody could provide a "constant" process that always sends back the same state. Hence, there is actually a request-answer mechanism : when the user inputs a value, either by a process in the other side of the state, or directly in a text field, the other processes are queried and return their new state following this message.
+
+We then have an overview of all of our graphical elements. These make up what we name a \textit{scenario}. By joining together time nodes, time constraints, time events, states, and triggers we can build arbitrarily complex scores. 
 
 
 % Note : cas ou on a une synchronisation mais la contrainte parente se termine avant
