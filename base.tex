@@ -147,6 +147,7 @@ The need for authoring software able to operate in both the temporal and logical
 To explain properly the kind of artistic demeanors we are working with, there will be three case studies.
 
 \paragraph{The Drop}
+% TODO 
 \paragraph{Klavierstücke XI}
 This is a music piece composed in 1957 by Karlheinz Stockhausen.
 
@@ -154,9 +155,9 @@ The interpretation plays a huge part on the piece. It is composed of multiple "s
 
 The performer starts with one of the segments. When he finishes playing a segment, he chooses another randomly. When he wants to choose a segment that he has already played two times, the music stop.
 
-Hence,  each interpretation is potentially unique.
+The number of possible combinations is so high that any given interpretation made by chosing the segments randomly would likely be played for the first time.
 
-We can model this programmatically quite easily by maintaining counters for each segment, incrementing the counter when it is played, and having a loop whose looping condition is "no counter is > 2".
+We can model this programmatically quite easily by maintaining counters for each segment, incrementing the counter when it is played, and having a loop whose looping condition is \texttt{no counter is greater than 2}.
 % Dire que pour i-score il manque juste la possibilité de créer des données à la volées. Note : pourquoi ne pas simplement ajouter un noeud dans l'arbre lorsqu'il est accédé la première fois (s'il est dans le device local.)
 
 \paragraph{The Runner}
@@ -176,14 +177,15 @@ Precisely, the installation can be explained as follows :
     \item Overarching all this, there is a topmost loop that regularly checks if the installation is correctly networked with the museum backend. If it's not the case, everything is stopped and a generic "Please call a technician" message is shown.
 \end{itemize}
 
-Currently, the whole logic is implemented in Max/MSP. A picture can be seen in fig.~\ref{fig.futuroscope}.
-
 \begin{figure}
-	\label{fig.futuroscope}
     \centering
     \includegraphics[scale=0.6]{images/futuroscope.jpg}
     \caption{The Runner installation. \tiny{©JL AUDY/FUTUROSCOPE}}
+    \label{fig.futuroscope}
 \end{figure}
+
+Currently, the whole logic is implemented in Max/MSP. A picture can be seen in fig.~\ref{fig.futuroscope}.
+
 % Dire que pour i-score il manque juste la possibilité de gérer des "sorties" à tout instant.
 
 \subsection{Existing approaches}
@@ -214,7 +216,6 @@ These environments, overall, allow to set-up a show very easily - sometimes drag
 At the other range of capabilities lies the full-blown programming languages. They allow complete flexibility over what's happenning. However, very few artists are eager to learn how to program in order to write interactive show; besides, when the show relies heavily on temporal elements, the textual structuration doesn't make the flow of the program easy to understand, as can be seen in fig.~\ref{fig.hardtofollow}.
 
 \begin{figure}
-\label{fig.hardtofollow}
 \begin{lstlisting}[language=c++]
 GlobalState state;
 
@@ -241,6 +242,7 @@ void scenario()
 }
 \end{lstlisting}
 \caption{A trivial light-changing program. However, the lack of cohesion between the code's organization and the temporal behaviour makes the development of the scenario hard to visualize. Time, logic and data are highly coupled, which makes it even harder to follow.}
+\label{fig.hardtofollow}
 \end{figure}
 
 The programmer also needs to keep track of the available data and devices that he can access; this is commonly achieved by using god objects that represent the external devices's state or something akin to haskell's World State concept. Else, a state-keeping object has to be passed across most of the method and function calls, which incurs a certain cost on the complexity of such software. Another common problematic is the method used to represent external devices. Some libraries will rather try to implement everything with the language's primitives and structures. Hence, an address of a device would be represented by a tree-like structure. Other would take an approach closer to a domain-specific language, by specifying the addresses in textual format that are to be parsed behind the scene. 
@@ -286,6 +288,22 @@ Allen's relationships and moving on to NTCCs, Petri nets, finite automatons, and
 The present document takes the point of view of an user that would approach the graphical user interface. However, most of the concepts are actually implemented in a C++ API (source) that can be used to generate scenarios directly from code. Moreover, some concepts in the graphical interface actually build themselves upon primitives offered in the API.
 
 \subsection{Specification of temporal relationships}\label{sec.temporal}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[b]{.5\linewidth}
+        \centering
+        \includegraphics[scale=0.5]{images/timenode.png}
+        \subcaption{Time constraints (horizontal),\\ and a time node (vertical)}
+    \end{minipage}\begin{minipage}[b]{.5\linewidth}
+    \centering
+    \includegraphics[scale=0.5]{images/souple.png}
+    \subcaption{A time constraint with min and max duration}
+\end{minipage}	
+
+\caption{Temporal elements of the model}
+\label{fig.cst.timenode}
+\end{figure}	
+
 The first required primitive is the one able to depict a duration.
 
 We shall call it a \textit{time constraint}.
@@ -297,21 +315,7 @@ This allows multiple time constraints to exist both serially, and in parallel, a
 As a byproduct, this allows a clean, graphical separation of concerns while still allowing the author to position related elements close to each other. % Parler du pb avec la verticalité.
 
 Finally, we can assess than constraints also have a logical role, which is of "saying what's next" : a time node will be triggered only after the previous constraints have finished.
-\begin{figure}
-	\centering
-	\begin{minipage}[b]{.5\linewidth}
-		\centering
-		\includegraphics[scale=0.5]{images/timenode.png}
-		\subcaption{Time constraints (horizontal),\\ and a time node (vertical)}
-	\end{minipage}\begin{minipage}[b]{.5\linewidth}
-		\centering
-		\includegraphics[scale=0.5]{images/souple.png}
-		\subcaption{A time constraint with min and max duration}
-	\end{minipage}	
-	
-	\caption{Temporal elements of the model}
-	\label{fig.cst.timenode}
-\end{figure}	
+
 
 % Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
 
@@ -328,7 +332,7 @@ Due to the presence of temporal logic, there are actually two kinds of condition
 	We call these \textit{triggers}; visual depiction is in fig.~\ref{fig.logical.trigger}.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\begin{minipage}[b]{.5\linewidth}
 		\centering
@@ -375,9 +379,17 @@ As it could be seen in section~\ref{sec.temporal}, we have two temporal primitiv
 The kind of data with which i-score is currently the most used is the OSC message, which maps an address in the format "/an/address/here" to a value. Multiple messages together form a state, which is analogous to a cue.
 
 \subsection{Processes}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.5]{images/processes.png}
+    \label{fig.processes}
+    \caption{Processes in constraints}
+\end{figure}
+
 To encapsulate data that is meant to last for some amount of time, we build the notion of the process. This is not without similarities with traditional operating system processes, albeit much simpler since they can be made in a purely functional way.
 
-Processes are located in time constraints; a constraint can hold any number of processes.
+Processes are located in time constraints; a constraint can hold any number of processes. This is shown in fig.~\ref{fig.processes}.
 
 The interface of a process (fig.~\ref{fig.processInterface}) is trivial and allows for a lot of cases common in show-control. The constraint's execution semantics act like a playhead : there is a clock which ticks; on each tick the process's state is pumped. However, it is possible to parametrize what happens with the start and end states which act like parameters to the process. 
 
@@ -400,13 +412,6 @@ However, the formalism enables us to have a clean way to give a duration to each
 \caption{Basic interface of a process}
 \label{fig.processInterface}
 \end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.5]{images/processes.png}
-	\label{fig.processes}
-	\caption{Processes in constraints}
-\end{figure}
-
 
 \subsection{States}
 The process have a meaning with regard to durations. However, another common necessity is sending cues at a precise time. For instance, while the position of a lightspot should be interpolated during a few hundred milliseconds to prevent breakage, stopping a music player should be a single message.
@@ -441,7 +446,7 @@ In order to achieve this, the state is going to save multiple values :
 These values can then be priorized and merged according to arbitrary rules. The user is then able to choose which values are to be synchronized and which ones should be considered independent.
 It is also possible to set a filter on the repetition of a given message. For instance, if should happen that a message "/play" was sent to a video player twice in a few milliseconds, the second message could be ignored. This is however done at the adress level, not at the scenario level. The effect can be seen on figure \ref{fig.curvesync}. % Mettre ailleurs
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.2]{images/curvesync.png}
 	\caption{Curves being synchronized on a state. When the user moves either side of the state, the other side will move accordingly}
@@ -467,7 +472,7 @@ A side note is the question of the root of a document : if the scenario is purel
     \item Have the document be contained in a constraint that would itself contain a process. 
 \end{itemize}
     
-We made the second choice : this way, we can put a trigger on the beginning of the constraint, which would answer to messages like "/play". This makes i-score remote-control friendly, in its own formalism.
+We made the second choice : this way, we can put a trigger on the beginning of the constraint, which would answer to messages like \texttt{/play}. This makes i-score remote-control friendly, in its own formalism.
 We can also easily control the play speed of the whole document by adjusting the clock of the constraint.
     
 In the same way, the loop is implemented as a process so that it can be manipulated more easily and provide specific GUI rendering, since we do not want to see a constraint wrap around itself, but rather have it repeat its pattern.
@@ -476,11 +481,11 @@ In the same way, the loop is implemented as a process so that it can be manipula
 The messages in the states do refer to remote devices : other OSC-compliant software like Max/MSP or PureData instances, or MIDI devices. 
 
 The access inside i-score is done via a common interface, organized as a tree, since it's the most common and familiar way to present a document-like software to the outside.
-This interface can be reimplemented for other protocols to enable access from i-score to other software. For instance, it could be interesting to have remote procedure call capabilities, via the ways of d-bus, COM+, or other common inter-process communication protocols. More simply, it also allows to quickly add discoverable trees of parameters to media software by the ways of the Minuit % (cite)
+This interface can be reimplemented for other protocols to enable access from i-score to other software. For instance, it could be interesting to have remote procedure call capabilities, via the ways of d-bus, COM+, or other common inter-process communication protocols. More simply, it also allows to quickly add discoverable trees of parameters to media software by the ways of the Minuit~\cite{baltazar2009virage}
 protocol. 
 
-This have been done for Pure Data, Max/MSP (via the Jamoma framework), Quartz Composer, and Qt. The Minuit protocol can use UDP transport (via OSC messages) or TCP transport over websockets. The OSCQuery %cite
-protocol is also being currently implemented this way. However, we have to keep in mind that not all protocols are born equal : for instance, the MIDI parameter tree is fixed by the MIDI standard and works with a handful of data types. Some software will offer fixed trees of parameters, and some other will offer a much greater flexibility. Likewise, some software would be able to be queried because a query protocol has been directly implemented, while some other, sometimes legacy software or even hardware come with a fixed address space that cannot be queried dynamically. We can prepare such address spaces in a configuration file and load them afterwards.
+This have been done for Pure Data, Max/MSP (via the Jamoma frameworks\cite{place2006jamoma}), Quartz Composer, and Qt. The Minuit protocol can use UDP transport (via OSC messages) or TCP transport over websockets. The OSCQuery~\cite{oscquery} 
+protocol is also being currently implemented behind this interface. However, we have to keep in mind that not all protocols are born equal : for instance, the MIDI parameter tree is fixed by the MIDI standard and works with a handful of data types. Some software will offer fixed trees of parameters, and some other will offer a much greater flexibility. Likewise, some software would be able to be queried because a query protocol has been directly implemented, while some other, sometimes legacy software or even hardware come with a fixed address space that cannot be queried dynamically. We can prepare such address spaces in a configuration file and load them afterwards.
 
 Generally, parameters have a raw data role, like the volume of a media player. However one can bind any code he wants to a specific address. Hence, some parameters, when triggered, could have the effect of changing the tree structure itself. For instance, one could have a parameter controlling the number of bands in an equalizer. When the number of bands is changed, new addresses allowing to change the gain and frequency of the newly created bands have to be added to the tree.
 
@@ -549,7 +554,7 @@ To have a generalized, we can use the query operator, "?" as the data source ins
 
 For instance, given the scenarisation abilities presented earlier, one could map the position on the vertical axis of a dancer on stage to the blue color intensity of a spotlight for five seconds, have an automation increasing the red color intensity for  two seconds, and then have another mapping where the dancer controls the red intensity very easily.
 
-A perspective would be the mapping of multi-dimensional parameters in a single view : for instance, what if we want to map the two-dimensional position $[x, y]$ of the dancer, to the $[hue, saturation]$ parameters of the light.
+A perspective would be the mapping of multi-dimensional parameters in a single view : for instance, what if we want to map the two-dimensional position $[x, y]$ of the dancer, to the $[hue, saturation]$ parameters of the light ?
 
 \subsection{Mappings spatiaux}
 Finally, we will try to present the most generalized form of mappings : spatial mappings.
