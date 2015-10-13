@@ -138,7 +138,7 @@ seconds, if a dancer jumps on the stage, play a sound and increase reverberation
 
 We will first present the current practices on the field, including the depiction of three specific artistic installations revolving around the idea of a computer-controlled orchestration.
 
-We will then explain the paradigm of the i-score software, which allows to express complex scenarios in a single graphical interface. These scenarios involve both temporal logic and structured programming. They can afterwards be deported or even embedded in other tools thanks to a C++ API. 
+We will then explain the paradigm of the i-score software suite, which allows to express complex scenarios in a single graphical interface. These scenarios involve both temporal logic and structured programming. They can afterwards be deported or even embedded in other tools thanks to a C++ API. 
 
 \subsection{Motivation}
 The need for authoring software able to operate in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
@@ -281,7 +281,9 @@ and then extend to the constructs relevant in a structured programming context.
 Finally we will see how data is handled.
 
 This model has evolved through many stages of refinement, first starting as an application of 
-Allen's relationships and moving on to NTCCs, Petri nets, finite automatons, and reactive languages.
+Allen's relationships and moving on to NTCCs, Petri nets, finite automatons, and reactive languages. (sources).
+
+The present document takes the point of view of an user that would approach the graphical user interface. However, most of the concepts are actually implemented in a C++ API (source) that can be used to generate scenarios directly from code. Moreover, some concepts in the graphical interface actually build themselves upon primitives offered in the API.
 
 \subsection{Specification of temporal relationships}\label{sec.temporal}
 The first required primitive is the one able to depict a duration.
@@ -504,29 +506,27 @@ Apart from this, we also provide two specific data types that are related to the
 
 The first is a "recopy" operator, named "=". It is an authoring help and has meaning only in a state at the end of a constraint. It means : "if there is a message with this address at the beginning of a constraint, then take its value".
 
-The second is a "query" operator, name "?". The query operator means that the value is to be from another address at run-time. It is then a very basic form of mapping, since the address of the message will take the new value. % TODO est-ce que les Behaviours sont implémentés ici ? 
-
-% TODO question de la représentation
+The second is a "query" operator, name "?". The query operator means that the value is to be from another address at run-time. It is then a very basic form of mapping, since the address of the message will take the new value.
 
 This allows to make a state from events depending on what's happening on stage, in order to have mappings. For instance, one could map the audio volume to the position of a dancer on stage at a given time.
 
-
-
+However the question of the representation of an unknown value, especially in a curve, is still open. For instance, we could represent it at each frame with its current value; this could mean that a lot of curves could be changing all the time in the scenario while editing, which could be offputting for the authors since they could look elsewhere for a few seconds, and ending not recognizing their scenario because all the curves changed. 
 \subsection{A computation model}
--> Partir des behaviours et de ?
+
+-> Partir des behaviours et de ? et rajouter opérations ?
 -> Transformations et chaînage
 Perspective : transformations appliquées à une boîte dans le temps
 
 
-\section{Processus modèles de données}
+\section{Data-oriented processes}
 Now that all of the temporal, structural and data-oriented primitives have been presented, we will show the processes that can be implemented in order to handle sepcific behaviours, like interpolations, for the authors.
 
 We will first study the specific case of the automation, very common in multimedia software, then study one-dimensional and spatial mappings.
 \subsection{Automations}
-% TODO courbes de strings
-The most important element in a sequencer is the automation : it's the primitive that maps data to time. However, it is still a hard problem to get right (source : article trajectoires), especially in term of user input mechanism. 
+The most important element in a sequencer is the automation : it's the primitive that maps data to time. However, it is still a hard problem to get right (source : article trajectoires), especially in term of user input mechanism. The two input mechanisms for curves currently implemented in i-score are manual positioning of points and segments, and recording of external values. 
 
-% TODO recording.
+There are two acceptable strategies for recording : the first would be recording the value of a parameter every few milliseconds, which is similar to audio recording. The other would be to record each time a message is received. Since there could be very fast changes of values, we chose to use the second method.
+However, since a lot of data can then be received when recording, we use the PSIMPL\cite{psimpl} algorithm library to reduce the number of values after recording to an acceptable range.
 
 i-score provides several facilities for automating data, most notably : 
 \begin{itemize}
@@ -536,7 +536,7 @@ i-score provides several facilities for automating data, most notably :
     \item Locking between points.
 \end{itemize}
 
-Currently, the plug-in interface implements linear and exponential segments as they are the most common in multimedia software; we would like to implement other curve families like Béziers curves, sines, and the traditional easing functions %TODO (source)...
+Currently, the plug-in interface implements linear and exponential segments as they are the most common in multimedia software; we would like to implement other curve families like Béziers curves, sines, and the traditional easing functions\cite{hudson1993animation}.
 
 We would also like to provide pointwise automations, which would be useful for non-numeric data. For instance, this would allow to record the typing of somebody and replay it afterwards.
 
@@ -549,7 +549,7 @@ To have a generalized, we can use the query operator, "?" as the data source ins
 
 For instance, given the scenarisation abilities presented earlier, one could map the position on the vertical axis of a dancer on stage to the blue color intensity of a spotlight for five seconds, have an automation increasing the red color intensity for  two seconds, and then have another mapping where the dancer controls the red intensity very easily.
 
-A perspective would be the mapping of multi-dimensional parameters in a single view : for instance, what if we want to map the two-dimensional position $[x, y]$ of the dancer, to the $hue, saturation]$ parameters of the light.
+A perspective would be the mapping of multi-dimensional parameters in a single view : for instance, what if we want to map the two-dimensional position $[x, y]$ of the dancer, to the $[hue, saturation]$ parameters of the light.
 
 \subsection{Mappings spatiaux}
 Finally, we will try to present the most generalized form of mappings : spatial mappings.
@@ -562,47 +562,61 @@ The idea presented here is a way to allow composers and authors to define such m
 Nous aimerions maintenant étendre nos travaux à des zones définies entièrement dans l'espace. Pour ce faire, nous utilisons la puissance complète des mathématiques à l'aide d'une bibliothèque de CAS. Ainsi, nous pouvons définir des zones à partir de notre arbre de paramètres et travailler sur des données spatiales : que se passe-t-il quand deux zones entrent en collision ?
     
 \subsection{Extensibilité}
+% TODO 
 - Plug-in LUA ? 
 - API dans d'autres langages ? (expliquer vite fait l'archi)
 - Conclusion : analogue à un petit OS spécialisé pour applications multimédia.
 
 \section{Collaboration et répartition}
+% TODO ?
+\section{Shortcomings (and pistes)}
+There are plenty of parts that requires new ideas to be solved in i-score, especially in the area of debugging. Nowadays, many programming language offer very robust tooling, as can be seen in the performance tools that are provided in integrated development environments such as Xcode, Visual Studio, and the various Unix development tool ecosystem\cite{spinellis2014software}. Such tooling can decrease the development time a lot; this should be an aim for the development of artistic interfaces, too.
 
-\section{Shortcomings (et pistes)}
-Lors du développement d'i-score, nous avons trouvé diverses pistes qui, nous le pensons, peuvent contribuer à 
-faire évoluer le logiciel mais sont encore des problèmes non-résolus.
+This is especially important given that a failure in show control can generally cost a lot of money, if used for expositions for instances.
+
+Hence, in the following section, we present the possibilities that are available for visualisation and debugging the execution of scenarios.
+
 
 \subsection{Debugging}
-Les scénarios fournis dans i-score sont des programmes; une pratique (hélas) nécessaire en programmation est le déboguage. 
-
-Le déboguage permet généralement de comprendre pourquoi un programme n'a pas fonctionné correctement. Heureusement, ici, nous n'avons pas de problèmes de gestion de mémoire, ou de pointeurs comme dans des langages  bas-niveau comme le C. Néanmoins, dès que la logique du spectacle devient complexe, il est utile de pouvoir comprendre qu'est-ce qui se passe mal.
+Debugging is generally used to understand and find out easily why did not a program produce the expected result. Here, we don't have too many problems due to low-level memory management and there cannot be crashes of the interpreter (minus potential bugs in its implementation).  However, as soon as the show's logic becomes complex, it is useful to have tools that makes the authors able to pinpoint where the execution of the show does not match the expected behaviour.
 
 \paragraph{Time Scrub}
-Le premier outil est le time scrub : il permet de se déplacer dans le temps et d'exécuter un élément sans repartir du début. Un problème évident se pose dès que de l'indéterminisme est introduit dans le scénario : comment gérer deux conditions exclusives par exemple ? Des outils simples et linéaires n'ont pas ce problème et peuvent scrubber à tout instant.
+The first tool is the time scrub : it allows the displacement in time and the execution of elements in the middle of a scenario process. 
 
-Plusieurs possibilités s'ouvrent alors :
+This causes a major problem as soon as there is indeterminism in the score : what should happen if there are two exclusive conditions for instance, and we want to play from the middle of both ? Such problems do not exist in purely linear tools, and authors generally have the habit to scrub wherever they want because of this.
+
+There are multiple possibilities : 
+
 \begin{itemize}
-    \item Définir des "chemins" par défaut qui doivent être empruntés lors de l'évaluation.
-    \item Choisir avant chaque exécution comment chaque condition doit s'exécuter.
-    \item Tout ignorer et ne lire qu'en considérant une contrainte.
+    \item One could define default paths in the tree defined in the process. These paths contain the boolean value for the conditions that are before the time chosen with the scrub, so that the current state can be inferred. However this would take a lot of time on a complex scenario.
+    Another possibility would be to have the defaults to false for everything, and require the author to set them manually to true before executing; this would be a hassle most of the time.
+    \item It would also be possible to ignore the whole past and only read from the current constraint. However, this causes the same problem than running an arbitrary piece of C code from the middle of it : what happens if the current instructions depend on a previous state being set correctly ?
 \end{itemize}
 
-De plus, un problème de déboguage lié aux contraintes temporelles se pose : jusqu'à présent, nous les avons présentées comme un moyen de définir une contrainte lors de l'exécution d'un scénario. Par exemple, dans le cas d'une machine à fumée, nous pouvons spécifier 10 secondes de préchauffage avant de commencer à envoyer la fumée. Dans certains cas, ne pas respecter le temps de préchauffage peut endommager le matériel, il est donc très important de le réaliser à chaque fois.
+The second problem can be explicited with the following case : if we want to debug a show which involves a smoke machine, it is important to know that they generally require a few tens of seconds of heating before being able to produce smoke. So, in the scenario, the author will certainly have a time constraint that lasts ten seconds before starting to send the smoke generation command. In some cases, not having the pre-heating may break the smoke machine.
 
-Cependant, si l'on autorise le déboguage à démarrer à partir de n'importe quel instant, il est possible de détruire le matériel par inadvertance, ce qui n'est pas désiré. Il est donc nécessaire de trouver un moyen de spécifier des contraintes "absolues" ou "nécessaires", possiblement en lisant un paramère qui indique l'état de préchauffe actuelle et lance une contrainte de préchauffage si l'état n'est pas apte à lancer la suite. Cela se rapproche des outils de scripting qui existent par exemple dans gdb.
+However, if we allow the debugging to start from the middle of any constraint, we might if we are not careful trigger the smoke without the heating. It is then necessary to find a way to specify absolute constraints, that are not only present during the execution of the program, but also during the debugging. This would maybe be possible by defining the i-score editing user interface within itself, but requires a lot of manpower. Another possibility would be to have scripting capabilities for the debugging; for instance the Python scripting capabilities of GDB are used for data-flow debugging in~\cite{pouget2013interactive}.
 
-\paragraph{Visualisation de l'exécution}
-Mode simple : on affiche le déroulement du temps.
+\paragraph{Execution visualization}
+Another problem is the visualization of the flow of time once it's running. It is very important to have visual cues of the execution of the program, since not everything may be visible to the spectators, or even in the case of remote monitoring.
 
-Mode avancé : les contraintes vont se déplacer dans le temps depuis le début de leur intervalle souple jusqu'à leur fin.
+Simply showing a time bar like it is done in other sequencers cannot be done here, also because of indeterminism.
+For instance, as soon as we have two triggers there will certainly be constraints that used to be synchronized graphically during authoring, but are not occuring at the same time anymore.
 
-\paragraph{Traces d'exécution}
-Enfin, il peut être utile d'obtenir des traces d'exécution après performance. Cela a un intérêt supplémentaire par rapport à une trace d'exécution d'un logiciel standard : par exemple, si la performance était mauvaise et incluait des danseurs, ils peuvent rejouer l'exécution telle qu'elle s'est passée pour comprendre qu'est-ce qui a posé problème. De même, une très bonne performance pourra être réutilisée par la suite si par exemple le spectacle doit être reproduit dans de moins bonnes conditions (par exemple si un des acteurs ne peut être présent).
+The basic possibility would be to simply show time bars per constraints. This may however overwhelm the person keeping an eye on the correct execution if there are too many constraints since there would be a lot of moving elements in the whole screen. This solution is currently implemented.
 
-Il devrait être possible de synchroniser dans une certaine mesure les traces d'exécution avec le document original : ainsi, si une durée est changée dans le document principal, cela peut être répercuté dans les traces, pour garder les conditions qui se sont / ne se sont pas exécutées.
+We also have a problem for infinite constraints : how should they be depicted during execution ? To solve this, we propose to displace and elongate the elements of the scenario according to their position in time. This would then allow to have an unified time bar like in other, linear tools. However, 
+this is not without problems either since a lot of graphical elements are now moving at the same time. We also have to save the editing state so that the composer can comes back to it afterwards.
 
-%\paragraph{Simulation d'environnements}
-%- Visualisation / simulation du résultat ? 
+\paragraph{Execution traces}
+Finally, it can be useful to save execution traces after the performance. For instance, if something was wrong on stage during a rehearsal, the state of everything up to a few seconds before the bad part should be restored so that it can be practiced without loosing time.
+Another interesting use case would be the recording of a performance for automatic, non-interactive replaying; it would be similar to the "rendering" feature of audio workstations.
+
+Traces can come in two formats : the first would be a raw dump of the messages that were sent and received.
+The second would be a save of the graphical state if we apply the "moving constraints" solution to the visualization problem.
+
+An interesting problem with traces is the synchronization with the original document. For instance, if a duration is changed in the main document, it could be interesting to keep it up to date in a given execution trace, to retroactively modify what happened if there was only a small deviation from the expected behaviour.
+
 
 \subsection{Extensions}
 - Scripting plug-in
