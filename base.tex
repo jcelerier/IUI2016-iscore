@@ -288,7 +288,7 @@ The first required primitive is the one able to depict a duration.
 
 We shall call it a \textit{time constraint}.
 The time constraint is not necessarily a fixed duration : to allow for interactiveness, 
-we must allow it to represent a range, or span of time. For instance, a time constraint may last between 3 and 5 seconds. The maximum can be infinite, to allow for permanent appliances running in a loop.
+we must allow it to represent a range, or span of time. For instance, a time constraint may last between 3 and 5 seconds. The maximum can be infinite, to allow for permanent appliances running in a loop. A constraint contains a clock which can be in master or slave mode.
 
 Then, we introduce a mean to synchronize multiple time constraints : a \textit{time node}. 
 This allows multiple time constraints to exist both serially, and in parallel, as can be seen in fig.~\ref{fig.cst.timenode}. 
@@ -318,6 +318,7 @@ Finally, we can assess than constraints also have a logical role, which is of "s
 After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
 The first element is the condition. For instance, we would like to say : "this temporal constraint will be played only if a given parameter has reached a value of 5".
 Hence, this is something that is at a lower level than classic if-then-else constructs; however we can rebuild them afterwards.
+
 Due to the presence of temporal logic, there are actually two kinds of conditions in i-score : 
 \begin{itemize}
 	\item The purely logical conditions; they cannot modify the flow of time, only be true or false. What matters is their value when they are being evaluated, which will cause the following constraints to be executed - or not. We call these \textit{time events}; visual depiction is in fig.~\ref{fig.logical.events}.
@@ -453,41 +454,49 @@ We then have an overview of all of our graphical elements. These make up what we
 
 % Note : cas ou on a une synchronisation mais la contrainte parente se termine avant
 
-\section{Hiérarchie}
-À l'aide de la notion de processus, nous pouvons introduire le concept de hiérarchie. La notion de scénario que nous avons présenté peut être placée dans un processus, qui aura comme spécificité d'avoir un noeud temporel de début. Ainsi, son état peut être récupéré récursivement à chaque instant en fonction des appels du parent.
+\section{Hierarchy}
+Thanks to the notion of process, we can introduce the concept of hierarchy. The notion of scenario that we have presented earlier can itself be put into a process. Its specificity is the presence of a starting time node; the scenario is then a tree of constraints that flourishes from it. Practically speaking, all of the interaction with scenarios is done in a scenario process.
 
-Par défaut, un document est constitué de deux noeuds temporels, et d'une contrainte intermédiaire qui contient un processus Scénario.
-Il aurait été possible d'avoir le cas inverse : l'élément de base aurait pu être un processus scénario dans lequel on commencerait à travailler; cependant avoir une contrainte comme élément parent permet de contrôler la vitesse de lecture globale de manière interne au formalisme. De même, on peut faire "lecture" sur le document en envoyant des messages OSC au noeud temporel de début.
+The state of the scenario is simple : at a given time, fetch the state of all the running constraints inside of the scenario. This may in turn run triggers, starting the following constraints in the hierarchical scenario. This way, we can have infinite hierarchy.
+Furthermore the idea of scenario as a process is interesting for authors because they provide a structured and well-defined unit which can be copy-pasted or saved in a library and reused in other shows.
 
-De même, la boucle est implémentée en terme de processus.
+A side note is the question of the root of a document : if the scenario is purely hierarchic, what is actually present when a document is opened ? There are two possible choices : 
+\begin{itemize}
+    \item Have the document be contained in a scenario process.
+    \item Have the document be contained in a constraint that would itself contain a process. 
+\end{itemize}
+    
+We made the second choice : this way, we can put a trigger on the beginning of the constraint, which would answer to messages like "/play". This makes i-score remote-control friendly, in its own formalism.
+We can also easily control the play speed of the whole document by adjusting the clock of the constraint.
+    
+In the same way, the loop is implemented as a process so that it can be manipulated more easily and provide specific GUI rendering, since we do not want to see a constraint wrap around itself, but rather have it repeat its pattern.
 
-La notion de processus est utile car elle permet très simplement de faire des copier-coller, des mute, etc.
+\section{State trees}
+The messages in the states do refer to remote devices : other OSC-compliant software like Max/MSP or PureData instances, or MIDI devices. 
 
-\section{Arbres d'états}
-Les états se réfèrent la plupart du temps à des périphériques distants : d'autres logiciels compatibles OSC comme Max/MSP ou PureData, ou bien des appareils MIDI.
+The access inside i-score is done via a common interface, organized as a tree, since it's the most common and familiar way to present a document-like software to the outside.
+This interface can be reimplemented for other protocols to enable access from i-score to other software. For instance, it could be interesting to have remote procedure call capabilities, via the ways of d-bus, COM+, or other common inter-process communication protocols. More simply, it also allows to quickly add discoverable trees of parameters to media software by the ways of the Minuit % (cite)
+protocol. This have been done for Pure Data, Max/MSP (via the Jamoma framework), Quartz Composer, and Qt. The Minuit protocol can use UDP transport (via OSC messages) or TCP transport over websockets. The OSCQuery %cite
+protocol is also being currently implemented this way. However, we have to keep in mind that not all protocols are born equal : for instance, the MIDI parameter tree is fixed by the MIDI standard and works with a handful of data types. Some software will offer fixed trees of parameters, and some other will offer a much greater flexibility. Likewise, some software would be able to be queried because a query protocol has been directly implemented, while some other, sometimes legacy software or even hardware come with a fixed address space that cannot be queried dynamically. We can prepare such address spaces in a configuration file and load them afterwards.
 
-L'accès se fait via une interface commune, organisée sous forme d'arbre.
+Generally, parameters have a raw data role, like the volume of a media player. However one can bind any code he wants to a specific address. Hence, some parameters, when triggered, could have the effect of changing the tree structure itself. For instance, one could have a parameter controlling the number of bands in an equalizer. When the number of bands is changed, new addresses allowing to change the gain and frequency of the newly created bands have to be added to the tree.
+
+The parameters in our device tree are currently accessible from the whole software and make for a global state, which is the easiest case. However, we would like to evolve towards the notion of local scope. This notion could be embodied into a process. For instance, a process would be able to control only a subset of the entirety of the addresses : light-related addresses if it's a hierarchical scenario geared towards the control of light and sound-related else.  
+
+This would be our last step towards structured programming since we currently lack structuration of the external data we are accessing. Another question is what to do with addresses that are requested in a scenario but not part of the device tree. A possibility would be to allocate them in a reserved space in the tree (or in the local scope of the process, if available). This would allow us to reach closer towards turing-completeness of our formalism since we would have both loops and a sort of memory allocation - we would mostly lack a way to run computations.
 
 
-% Spécifier possibilités de l'interface Device / Node
+\subsection{Local tree}
+The document exports its own parameter tree, accessible from the inside and from the outside.
+For instance, a scenario will export the triggers that it contains so that they can be manually triggered from the outside (with a companion application running in the internet, or on mobile devices).
 
+This also allows to refer to the time that has currently elapsed at run-time, in order to re-use it in other constraints : for instance, if the first constraint has not been triggered in five seconds, a condition shall become false.
 
-L'avantage d'une organisation en arbre est que cela permet de représenter simplement les DOM courants; la majorité des paramètres ont un rôle purement de données, comme par exemple contrôler le volume d'un son. Mais d'autres peuvent avoir des rôles plus complexes et se comporter comme des fonctions qui pourraient elle-même modifier la structure de l'arbre.
+This would also allow to have loops whose duration depends on itself, to have some kind of converging behaviour.
 
-% Mettre capture d'écran d'un objet Qt ?
+A loopback device is implemented to have fast access to local messages.
 
-Cette interface peut être simplement réimplémentée. Cependant il faut tenir compte du fait que tous les protocoles n'offrent pas les mêmes capacités : par exemple un arbre MIDI est entièrement fixe car les messages sont fixés dans la spécification MIDI. En revanche un arbre qui correspondrait à un logiciel écrit en Max/MSP serait beaucoup plus dynamique.
-
-Les paramètres présents dans cet arbre peuvent ensuite être accédés depuis tout le logiciel.
-
-Pour l'instant, ils sont donc organisés sous forme d'état global, à l'image d'une base de données. Cependant nous aimerions évoluer vers un état avec une portée locale, peut-être avec un raffinement au niveau des processus (Processus "LocalScope"). Cela rejoindrait le concept d'unité de données de la programmation structurée.
-
-\subsection{Arbre local}
-De plus, le document présente lui aussi son propre arbre de paramètres, addressable depuis l'intérieur comme l'extérieur.
-
-Cela permet notamment de se référer au temps qui s'est écoulé à l'exécution pour s'en reservir dans d'autres contraintes. Ces messages sont addressables depuis le réseau; un loopback est implémenté pour un accès local rapide.
-
-Cela permet par exemple de faire des boucles à durée convergente, des canons, et des systèmes en forme de fractale. % donner exemple
+\subsection{A computation model}
 
 \section{Types de données}
 En plus des types classiques (entiers, flottants, chaines de caractères, tableaux),  nous offrons deux types de donnée spécifiques et relatifs à l'utilisation temporelle qui est faite.
