@@ -390,11 +390,10 @@ However, the formalism enables us to have a clean way to give a duration to each
 \begin{figure}
 	\centering
 \begin{lstlisting}
-    interface Process {
-       State state(Time);
-       State& startState();
-       State& endState();
-    }
+    Process:
+       State  state(Time)
+       State& startState()
+       State& endState()
 \end{lstlisting}
 \caption{Basic interface of a process}
 \label{fig.processInterface}
@@ -476,14 +475,16 @@ The messages in the states do refer to remote devices : other OSC-compliant soft
 
 The access inside i-score is done via a common interface, organized as a tree, since it's the most common and familiar way to present a document-like software to the outside.
 This interface can be reimplemented for other protocols to enable access from i-score to other software. For instance, it could be interesting to have remote procedure call capabilities, via the ways of d-bus, COM+, or other common inter-process communication protocols. More simply, it also allows to quickly add discoverable trees of parameters to media software by the ways of the Minuit % (cite)
-protocol. This have been done for Pure Data, Max/MSP (via the Jamoma framework), Quartz Composer, and Qt. The Minuit protocol can use UDP transport (via OSC messages) or TCP transport over websockets. The OSCQuery %cite
+protocol. 
+
+This have been done for Pure Data, Max/MSP (via the Jamoma framework), Quartz Composer, and Qt. The Minuit protocol can use UDP transport (via OSC messages) or TCP transport over websockets. The OSCQuery %cite
 protocol is also being currently implemented this way. However, we have to keep in mind that not all protocols are born equal : for instance, the MIDI parameter tree is fixed by the MIDI standard and works with a handful of data types. Some software will offer fixed trees of parameters, and some other will offer a much greater flexibility. Likewise, some software would be able to be queried because a query protocol has been directly implemented, while some other, sometimes legacy software or even hardware come with a fixed address space that cannot be queried dynamically. We can prepare such address spaces in a configuration file and load them afterwards.
 
 Generally, parameters have a raw data role, like the volume of a media player. However one can bind any code he wants to a specific address. Hence, some parameters, when triggered, could have the effect of changing the tree structure itself. For instance, one could have a parameter controlling the number of bands in an equalizer. When the number of bands is changed, new addresses allowing to change the gain and frequency of the newly created bands have to be added to the tree.
 
 The parameters in our device tree are currently accessible from the whole software and make for a global state, which is the easiest case. However, we would like to evolve towards the notion of local scope. This notion could be embodied into a process. For instance, a process would be able to control only a subset of the entirety of the addresses : light-related addresses if it's a hierarchical scenario geared towards the control of light and sound-related else.  
 
-This would be our last step towards structured programming since we currently lack structuration of the external data we are accessing. Another question is what to do with addresses that are requested in a scenario but not part of the device tree. A possibility would be to allocate them in a reserved space in the tree (or in the local scope of the process, if available). This would allow us to reach closer towards turing-completeness of our formalism since we would have both loops and a sort of memory allocation - we would mostly lack a way to run computations.
+This would be our last step towards structured programming since we currently lack structuration of the external data we are accessing. Another question is what to do with addresses that are requested in a scenario but not part of the device tree. A possibility would be to allocate them in a reserved space in the tree (or in the local scope of the process, if available). This would allow us to reach closer towards turing-completeness of our formalism since we would have both loops and a sort of memory allocation - we would mostly lack a way to run actual numeric computations.
 
 
 \subsection{Local tree}
@@ -496,58 +497,73 @@ This would also allow to have loops whose duration depends on itself, to have so
 
 A loopback device is implemented to have fast access to local messages.
 
+\subsection{Data types}
+The first goal is to manage classical OSC data types : integers, floating point numbers, strings, arrays...
+
+Apart from this, we also provide two specific data types that are related to the temporal nature of our scenarios.
+
+The first is a "recopy" operator, named "=". It is an authoring help and has meaning only in a state at the end of a constraint. It means : "if there is a message with this address at the beginning of a constraint, then take its value".
+
+The second is a "query" operator, name "?". The query operator means that the value is to be from another address at run-time. It is then a very basic form of mapping, since the address of the message will take the new value. % TODO est-ce que les Behaviours sont implémentés ici ? 
+
+% TODO question de la représentation
+
+This allows to make a state from events depending on what's happening on stage, in order to have mappings. For instance, one could map the audio volume to the position of a dancer on stage at a given time.
+
+
+
 \subsection{A computation model}
+-> Partir des behaviours et de ?
+-> Transformations et chaînage
+Perspective : transformations appliquées à une boîte dans le temps
 
-\section{Types de données}
-En plus des types classiques (entiers, flottants, chaines de caractères, tableaux),  nous offrons deux types de donnée spécifiques et relatifs à l'utilisation temporelle qui est faite.
-
-Le premier est =. = est une aide à l'édition : elle n'a de sens que dans l'état à la fin d'une contrainte et signifie : "s'il existe un message à cette addresse au début de la contrainte, alors prends sa valeur".
-
-Le second est ?. ? prend son sens lors de l'exécution, en permettant d'agir en fonction d'une valeur non connue à l'édition du scénario.
-
-Cela permet par exemple de former un état à partir d'évènements qui dépendent de ce qu'il se produit sur scène, pour faire des mappings; par exemple on pourrait mapper le volume audio à la position d'un danseur sur scène à un instant donné.
-
-\section{Transformations et chaînage}
-Perspective : transformations appliquées à une boîte
 
 \section{Processus modèles de données}
-Maintenant que nous avons présenté les éléments principaux du modèle temporel, il est temps de se concentrer sur des extensions spécialisées adaptées à des cas particuliers de gestion des données.
+Now that all of the temporal, structural and data-oriented primitives have been presented, we will show the processes that can be implemented in order to handle sepcific behaviours, like interpolations, for the authors.
 
+We will first study the specific case of the automation, very common in multimedia software, then study one-dimensional and spatial mappings.
 \subsection{Automations}
-L'élément le plus important de tout séquenceur ou logiciel d'animation est l'automation.
+% TODO courbes de strings
+The most important element in a sequencer is the automation : it's the primitive that maps data to time. However, it is still a hard problem to get right (source : article trajectoires), especially in term of user input mechanism. 
 
-L'automation permet d'avoir un comportement évolutif dans le temps, la plupart du temps continu.
+% TODO recording.
 
-L'automation est une fonction qui à un instant associe un état.
+i-score provides several facilities for automating data, most notably : 
+\begin{itemize}
+    \item Discontinuous curves.
+    \item Plug-in interface for segments kind.
+    \item Multiple edition modes : when moving a point, remove the overlapping points or ignore them.
+    \item Locking between points.
+\end{itemize}
 
-Nous avons essayé de pousser le concept de l'automation au maximum dans i-score.
+Currently, the plug-in interface implements linear and exponential segments as they are the most common in multimedia software; we would like to implement other curve families like Béziers curves, sines, and the traditional easing functions %TODO (source)...
 
-- Mode par points
-- Discontinuités
-- Interface de segments
-- Modes d'édition inspirés de l'existant
+We would also like to provide pointwise automations, which would be useful for non-numeric data. For instance, this would allow to record the typing of somebody and replay it afterwards.
 
-La valeur d'un point dans une automation peut être définie par ? (ou = ?).
+Finally, an interesting addition would be to use the two special values that we defined earlier, ? and =, to specify points that would not only be at the beginning and the end of the automation, but anywhere at the beginning of a segment (? wouldn't work at the end of a segment because we won't have it's value until its time has explicitely come). This way, automations could be easily changed dynamically.
 
-Futur : automation de chaînes de caractères ?
+\subsection{One-dimensional mappings}
+Mappings are a generalization of automations. While automations map time to a given parameter, mappings map, as their name implies, a parameter to another parameter with a transfer function. Since time is an accessible parameter, it is possible to recreate the automation process with the mapping process.
 
-\subsection{Mappings simples}
-Les mappings sont une généralisation de l'automation.
+To have a generalized, we can use the query operator, "?" as the data source instead of the time. It will be queried at each tick by the clock, ask for the current value of the remote parameter, and map it with the transfer function to the output address.
 
-Plutôt que d'associer du temps à un état, nous associons un état à un autre état par une fonction de transfert. Cette fonction est aussi une courbe.
+For instance, given the scenarisation abilities presented earlier, one could map the position on the vertical axis of a dancer on stage to the blue color intensity of a spotlight for five seconds, have an automation increasing the red color intensity for  two seconds, and then have another mapping where the dancer controls the red intensity very easily.
 
-Par exemple, on peut associer la position d'un danseur à la couleur rouge d'un projecteur, puis avec une autre contrainte temporelle, l'associer à la couleur bleue.
-
-% Futur : associer [x; y] à [hue; saturation] 
+A perspective would be the mapping of multi-dimensional parameters in a single view : for instance, what if we want to map the two-dimensional position $[x, y]$ of the dancer, to the $hue, saturation]$ parameters of the light.
 
 \subsection{Mappings spatiaux}
+Finally, we will try to present the most generalized form of mappings : spatial mappings.
 
-Les mappings que nous présentons là sont une première partie des possibilités que l'on peut avoir.
+With automations and one-dimensional mappings, the author has to define a curve that specifies the mapping of a set of data to another set of data.
+
+The idea presented here is a way to allow composers and authors to define such mappings, first directly from mathematical formulas, and then from other mappings.
+
 
 Nous aimerions maintenant étendre nos travaux à des zones définies entièrement dans l'espace. Pour ce faire, nous utilisons la puissance complète des mathématiques à l'aide d'une bibliothèque de CAS. Ainsi, nous pouvons définir des zones à partir de notre arbre de paramètres et travailler sur des données spatiales : que se passe-t-il quand deux zones entrent en collision ?
     
 \subsection{Extensibilité}
-
+- Plug-in LUA ? 
+- API dans d'autres langages ? (expliquer vite fait l'archi)
 - Conclusion : analogue à un petit OS spécialisé pour applications multimédia.
 
 \section{Collaboration et répartition}
