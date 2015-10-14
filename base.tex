@@ -168,8 +168,8 @@ The number of possible combinations is so high that any given interpretation mad
 
 This can be modelled easily by maintaining counters for each segment, incrementing the counter when it is played, and having a global loop whose looping condition is \texttt{no counter is greater than 2}. However the musical parts would have to be written in a specific music-sheet oriented software.
 
-\paragraph{Alain Bonardi}
-Alain Bonardi is a french electro-acoustic composer; there are ten blocks that each contain a small part of piano sheet music; an external algorithm does a random draw of these blocks. There are some similarities with Stockhausen's piece, but, instead of leaving the choice of the order to the performer, it's the algorithm that makes the choice and the performer has to interpret the sheet music that is being shown to him in real time. In addition, each block contains controls for background music to play in ambisonics, independently of what the pianist is doing.
+\paragraph{Pianotronics \#3}
+Alain Bonardi is a french electro-acoustic composer; in this musical piece there are ten blocks that each contain a small part of piano sheet music; an external algorithm does a random draw of these blocks. There are some similarities with Stockhausen's piece, but, instead of leaving the choice of the order to the performer, it's the algorithm that makes the choice and the performer has to interpret the sheet music that is being shown to him in real time. In addition, each block contains controls for background music to play in ambisonics, independently of what the pianist is doing.
 
 Since a computer is generating the sheet music, the performer has to follow everything quickly. However, the interpretation can have a small degree of freedom : the performer's playing is recorded and compared with the displayed sheet music. When an algorithm detects that the part was successfully played, or if a timeout has expired, it then moves on to the next part.
 
@@ -273,28 +273,15 @@ Some domains have more specific tools : for instance, the LISP community has pro
 \subsubsection{Graphical programming interactive applications}
 A lot of approaches exist with regards to visual programming. However, not all are conceived with the idea of managing time in mind. Those that are generally geared towards the kind of applications that we are interested in, or video games.
 
+A first instance of simple graphical programming language is Scratch\cite{resnick2009scratch}, built at the MIT. The language is very close from standard structured programming language, with explicit conditional and looping constructs; however building a program is done by assembling boxes together instead of typing.
 
-* First present the raw time models, as well as the formal models for i-score?
+Then, many environments are stemming from the data flow model. For instance, it is implemented in video game engines like Unreal Engine's Blueprint system\cite{shah2014mastering}. Data-flow programming is based on the computation of the result of an operation not when it is asked for by the programmer, like it is done with imperative programming, but when the operands of the operation are set. Hence, the programmer describes an invariant and values that come from external sensors (or generators) are pumped into the system and transformed in an output.
+The most used in artistic and interactive installations are patcher software, like Max/MSP or PureData. Patchers use the data-flow model. A specific patcher software for audio algorithms exists : Integra Live\cite{bullock2011integra}.
 
-* Then present more advanced software / toolkits
+Finally, not all flow programming languages are meant to produce real-time applications. For instance, OpenMusic\cite{bresson_openmusic:_2011} is a graphical language used for the generation of sheet music.
 
-* Reprendre trucs dans présentation robots (moteurs de jeu, etc.), inscore
-
-* Scratch
-
- % du tout temporel au tout logique en passant par systèmes réactifs ?
-Max, PureData, React.[...], Integra Live (qui est plutôt orienté son), Unity \& envs de jeu, etc. (revoir slides), Chronic (cf. téléchargements), OpenMusic, Antescofo (et Ascograph), logiciels de la conférence sur appli réactives (cf. slack).
-
-OpenMusic : pas d'exécution.
-
-MEF++\cite{ackermann_direct_1994} : framework pour applications interactives.
-
-Temps souple\cite{song_interactive_1999}
-
-
-\subsubsection{Document models and application description} % bof ici
-CORBA, DBus, DOM HTML, DOM Qt, DOM Jamoma...
-
+Generally, data-flow based programming language's graphical representation are graphs, where the nodes are computations and the directed edges move the output of a computation to the input of another.
+But there are other forms of multimedia-oriented graphical languages that put the emphasis on the time instead of the computations in their graphs. For instance, applications build with the MEF++ frameworks\cite{ackermann_direct_1994} represents time in boxes that can contain arbitrary multimedia data. The question of variable time has also been tackled with constraint solving algorithms in \cite{song_interactive_1999}; although it is only useful during the authoring part : the execution of the created multimedia "programs" is fixed.
 
 \section{Temporal structure}\label{sec.temporal}
 \begin{figure}[h]
@@ -520,18 +507,13 @@ The first goal is to manage classical OSC data types : integers, floating point 
 
 Apart from this, we also provide two specific data types that are related to the temporal nature of our scenarios.
 
-The first is a "recopy" operator, named "=". It is an authoring help and has meaning only in a state at the end of a constraint. It means : "if there is a message with this address at the beginning of a constraint, then take its value".
+The first is a "recopy" operator, written \texttt{=}. It is an authoring help and has meaning only in a state at the end of a constraint. It means : "if there is a message with this address at the beginning of a constraint, then take its value".
 
-The second is a "query" operator, name "?". The query operator means that the value is to be from another address at run-time. It is then a very basic form of mapping, since the address of the message will take the new value.
+The second is a "query" operator, written \texttt{?}. The query operator means that the value is to be from another address at run-time. It is then a very basic form of mapping, since the address of the message will take the new value.
 
 This allows to make a state from events depending on what's happening on stage, in order to have mappings. For instance, one could map the audio volume to the position of a dancer on stage at a given time.
 
 However the question of the representation of an unknown value, especially in a curve, is still open. For instance, we could represent it at each frame with its current value; this could mean that a lot of curves could be changing all the time in the scenario while editing, which could be offputting for the authors since they could look elsewhere for a few seconds, and ending not recognizing their scenario because all the curves changed. 
-\subsection{A computation model}
-
--> Partir des behaviours et de ? et rajouter opérations ?
--> Transformations et chaînage
-Perspective : transformations appliquées à une boîte dans le temps
 
 
 \section{Data-oriented processes}
@@ -556,32 +538,34 @@ Currently, the plug-in interface implements linear and exponential segments as t
 
 We would also like to provide pointwise automations, which would be useful for non-numeric data. For instance, this would allow to record the typing of somebody and replay it afterwards.
 
-Finally, an interesting addition would be to use the two special values that we defined earlier, ? and =, to specify points that would not only be at the beginning and the end of the automation, but anywhere at the beginning of a segment (? wouldn't work at the end of a segment because we won't have it's value until its time has explicitely come). This way, automations could be easily changed dynamically.
+Finally, an interesting addition would be to use the two special values that we defined earlier, \texttt{?} and \texttt{=}, to specify points that would not only be at the beginning and the end of the automation, but anywhere at the beginning of a segment. \texttt{?} wouldn't work at the end of a segment because we won't know its value until its querying time has arrived. This way, automations could be easily changed dynamically.
 
 \subsection{One-dimensional mappings}
 Mappings are a generalization of automations. While automations map time to a given parameter, mappings map, as their name implies, a parameter to another parameter with a transfer function. Since time is an accessible parameter, it is possible to recreate the automation process with the mapping process.
 
-To have a generalized, we can use the query operator, "?" as the data source instead of the time. It will be queried at each tick by the clock, ask for the current value of the remote parameter, and map it with the transfer function to the output address.
+To have a generalized, we can use the query operator, \texttt{?} as the data source instead of the time. It will be queried at each tick by the clock, ask for the current value of the remote parameter, and map it with the transfer function to the output address.
 
 For instance, given the scenarisation abilities presented earlier, one could map the position on the vertical axis of a dancer on stage to the blue color intensity of a spotlight for five seconds, have an automation increasing the red color intensity for  two seconds, and then have another mapping where the dancer controls the red intensity very easily.
 
 A perspective would be the mapping of multi-dimensional parameters in a single view : for instance, what if we want to map the two-dimensional position $[x, y]$ of the dancer, to the $[hue, saturation]$ parameters of the light ?
 
 \subsection{Mappings spatiaux}
-Finally, we will try to present the most generalized form of mappings : spatial mappings.
+%TODO                                                
+%Finally, we will try to present the most generalized form of mappings : spatial mappings.
 
-With automations and one-dimensional mappings, the author has to define a curve that specifies the mapping of a set of data to another set of data.
+%With automations and one-dimensional mappings, the author has to define a curve that specifies the mapping of a set of data to another set of data.
 
-The idea presented here is a way to allow composers and authors to define such mappings, first directly from mathematical formulas, and then from other mappings.
+%The idea presented here is a way to allow composers and authors to define such mappings, first directly from mathematical formulas, and then from other mappings.
 
 
-Nous aimerions maintenant étendre nos travaux à des zones définies entièrement dans l'espace. Pour ce faire, nous utilisons la puissance complète des mathématiques à l'aide d'une bibliothèque de CAS. Ainsi, nous pouvons définir des zones à partir de notre arbre de paramètres et travailler sur des données spatiales : que se passe-t-il quand deux zones entrent en collision ?
+%Nous aimerions maintenant étendre nos travaux à des zones définies entièrement dans l'espace. Pour ce faire, nous utilisons la puissance complète des mathématiques à l'aide d'une bibliothèque de CAS. Ainsi, nous pouvons définir des zones à partir de notre arbre de paramètres et travailler sur des données spatiales : que se passe-t-il quand deux zones entrent en collision ?
     
-\subsection{Extensibilité}
-% TODO 
-- Plug-in LUA ? 
-- API dans d'autres langages ? (expliquer vite fait l'archi)
-- Conclusion : analogue à un petit OS spécialisé pour applications multimédia.
+\subsection{Extensibility}
+Since the process interface is open, anybody can write a process plug-in and be able to use it in i-score to perform his computations in time. For instance, suggested ideas have been to implement a small embedded scripting language, like LUA, as a process, which would allow authors knowledgeable in textual programming to extend the scenarios freely.
+
+There is also a lot of freedom in term of implementation : instead of the current data-pulling model, where a clock recursively checks for all the underlying data and then applies it, we could have a "push" model, where each process has the task of sending its own data. This would work better in many-core environments since processes don't have sharing and locking problem between them, they just send data.
+
+To achieve this, it could be interesting to see how the primitives of a real operating system's scheduler could be used to have a multimedia execution operating system implemented on top of the OS's native processes and inter-process communication like D-Bus.
 
 \section{Tooling}
 There are plenty of parts that requires new ideas to be solved in i-score, especially in the area of debugging. Nowadays, many programming language offer very robust tooling, as can be seen in the performance tools that are provided in integrated development environments such as Xcode, Visual Studio, and the various Unix development tool ecosystem\cite{spinellis2014software}. Such tooling can decrease the development time a lot; this should be an aim for the development of artistic interfaces, too.
@@ -633,9 +617,9 @@ An interesting problem with traces is the synchronization with the original docu
 
 
 \section{Evaluation}
-- Time to develop artistic installations greatly reduced.
-
 \section{Conclusion}
+- Time to develop artistic installations greatly reduced; but need to evaluate more.
+- REcapitulate the important points and achievements
 %% Logiciel ouvert et utilisable (API C++)
 %% Perspectives : autres implémentations (FPGA, kdbus, modèle de calcul ?)
 
