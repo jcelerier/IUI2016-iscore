@@ -289,7 +289,7 @@ Temps souple\cite{song_interactive_1999}
 CORBA, DBus, DOM HTML, DOM Qt, DOM Jamoma...
 
 
-\section{Specification of temporal relationships}\label{sec.temporal}
+\section{Temporal structure}\label{sec.temporal}
 \begin{figure}[h]
     \centering
     \begin{minipage}[b]{.5\linewidth}
@@ -322,7 +322,7 @@ Finally, we can assess than constraints also have a logical role, which is of "s
 % Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
 
 
-\section{Structured temporal programming}\label{sec.structured}
+\section{Logical structure}\label{sec.structured}
 After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
 The first element is the condition. For instance, we would like to say : "this temporal constraint will be played only if a given parameter has reached a value of 5".
 Hence, this is something that is at a lower level than classic if-then-else constructs; however we can rebuild them afterwards.
@@ -374,7 +374,7 @@ It shall also be noted that when we presented the time nodes and time constraint
 \end{figure}
 
 % TODO ifthenelse
-\section{From structure to content}
+\section{Data structuring}
 Now that we have established the entirety of the elements necessary for logical and temporal structuring of scenarios, we shall study how data is handled in the system.
 As it could be seen in section~\ref{sec.temporal}, we have two temporal primitives : one that manages durations, and another that manages synchronization.
 
@@ -385,8 +385,8 @@ The kind of data with which i-score is currently the most used is the OSC messag
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.5]{images/processes.png}
-    \label{fig.processes}
     \caption{Processes in constraints}
+    \label{fig.processes} 
 \end{figure}
 
 To encapsulate data that is meant to last for some amount of time, we build the notion of the process. This is not without similarities with traditional operating system processes, albeit much simpler since they can be made in a purely functional way.
@@ -462,7 +462,7 @@ We then have an overview of all of our graphical elements. These make up what we
 
 % Note : cas ou on a une synchronisation mais la contrainte parente se termine avant
 
-\section{Hierarchy}
+\subsection{Hierarchy}
 Thanks to the notion of process, we can introduce the concept of hierarchy. The notion of scenario that we have presented earlier can itself be put into a process. Its specificity is the presence of a starting time node; the scenario is then a tree of constraints that flourishes from it. Practically speaking, all of the interaction with scenarios is done in a scenario process.
 
 The state of the scenario is simple : at a given time, fetch the state of all the running constraints inside of the scenario. This may in turn run triggers, starting the following constraints in the hierarchical scenario. This way, we can have infinite hierarchy.
@@ -480,7 +480,8 @@ We can also easily control the play speed of the whole document by adjusting the
 In the same way, the loop is implemented as a process so that it can be manipulated more easily and provide specific GUI rendering, since we do not want to see a constraint wrap around itself, but rather have it repeat its pattern.
 
 Now that we have a loop and a scenario process, we can allow processes in the user interface to get their own duration : this is simply done by embedding them in a scenario process, with a constraint of the given duration at the API level. We can replace the scenario process by a loop process if we want to loop the content of the process for all the duration of the parent constraint instead.
-\section{State trees}
+
+\section{Device trees}
 The messages in the states do refer to remote devices : other OSC-compliant software like Max/MSP or PureData instances, or MIDI devices. 
 
 The access inside i-score is done via a common interface, organized as a tree, since it's the most common and familiar way to present a document-like software to the outside.
@@ -507,7 +508,7 @@ This would also allow to have loops whose duration depends on itself, to have so
 
 A loopback device is implemented to have fast access to local messages.
 
-\subsection{Data types}
+\subsection{Data types in States}
 The first goal is to manage classical OSC data types : integers, floating point numbers, strings, arrays...
 
 Apart from this, we also provide two specific data types that are related to the temporal nature of our scenarios.
@@ -575,9 +576,7 @@ Nous aimerions maintenant étendre nos travaux à des zones définies entièreme
 - API dans d'autres langages ? (expliquer vite fait l'archi)
 - Conclusion : analogue à un petit OS spécialisé pour applications multimédia.
 
-\section{Collaboration et répartition}
-% TODO ?
-\section{Shortcomings (and pistes)}
+\section{Tooling}
 There are plenty of parts that requires new ideas to be solved in i-score, especially in the area of debugging. Nowadays, many programming language offer very robust tooling, as can be seen in the performance tools that are provided in integrated development environments such as Xcode, Visual Studio, and the various Unix development tool ecosystem\cite{spinellis2014software}. Such tooling can decrease the development time a lot; this should be an aim for the development of artistic interfaces, too.
 
 This is especially important given that a failure in show control can generally cost a lot of money, if used for expositions for instances.
@@ -603,7 +602,7 @@ There are multiple possibilities :
 
 The second problem can be explicited with the following case : if we want to debug a show which involves a smoke machine, it is important to know that they generally require a few tens of seconds of heating before being able to produce smoke. So, in the scenario, the author will certainly have a time constraint that lasts ten seconds before starting to send the smoke generation command. In some cases, not having the pre-heating may break the smoke machine.
 
-However, if we allow the debugging to start from the middle of any constraint, we might if we are not careful trigger the smoke without the heating. It is then necessary to find a way to specify absolute constraints, that are not only present during the execution of the program, but also during the debugging. This would maybe be possible by defining the i-score editing user interface within itself, but requires a lot of manpower. Another possibility would be to have scripting capabilities for the debugging; for instance the Python scripting capabilities of GDB are used for data-flow debugging in~\cite{pouget2013interactive}.
+However, if we allow the debugging to start from the middle of any constraint, we might if we are not careful trigger the smoke without the heating. It is then necessary to find a way to specify absolute constraints, that are not only present during the execution of the program, but also during the debugging. This would maybe be possible by defining the i-score editing user interface within itself, but requires a lot of manpower. Another possibility would be to have scripting capabilities for the debugging; for instance the Python scripting interfaces of GDB are used for data-flow debugging in~\cite{pouget2013interactive}.
 
 \paragraph{Execution visualization}
 Another problem is the visualization of the flow of time once it's running. It is very important to have visual cues of the execution of the program, since not everything may be visible to the spectators, or even in the case of remote monitoring.
@@ -625,9 +624,6 @@ The second would be a save of the graphical state if we apply the "moving constr
 
 An interesting problem with traces is the synchronization with the original document. For instance, if a duration is changed in the main document, it could be interesting to keep it up to date in a given execution trace, to retroactively modify what happened if there was only a small deviation from the expected behaviour.
 
-
-\subsection{Extensions}
-- Scripting plug-in
 
 \section{Evaluation}
 - Time to develop artistic installations greatly reduced.
