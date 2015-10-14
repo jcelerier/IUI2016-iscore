@@ -128,7 +128,7 @@ letter-number combination will need to be entered.}
 
 \section{Introduction}
 This paper presents a paradigm that aims to allow non-programmers 
-to conceive interactive applications easily and execute them in production.
+to conceive interactive applications easily and execute them in production. These interactive applications can be either musical pieces, interactive shows where the interaction may come from the performer, or even the spectators, museum installations and graphical interfaces.
 
 The existing software stack is either oriented too much towards the 
 cue paradigm, which is useful as long as there is no complex logic involved, 
@@ -157,19 +157,21 @@ The need for authoring software able to operate in both the temporal and logical
 \subsection{Use cases}
 To explain properly the kind of artistic demeanors we are working with, there will be three case studies.
 
-\paragraph{The Drop}
-% TODO 
 \paragraph{Klavierstücke XI}
 This is a music piece composed in 1957 by Karlheinz Stockhausen.
 
-The interpretation plays a huge part on the piece. It is composed of multiple "segments", a bit longer than musical bars.
+The interpretation plays a huge part on the piece. It is composed of multiple "segments", a bit longer than musical bars. This is called a polyvalent structure.
 
 The performer starts with one of the segments. When he finishes playing a segment, he chooses another randomly. When he wants to choose a segment that he has already played two times, the music stop.
 
 The number of possible combinations is so high that any given interpretation made by chosing the segments randomly would likely be played for the first time.
 
-We can model this programmatically quite easily by maintaining counters for each segment, incrementing the counter when it is played, and having a loop whose looping condition is \texttt{no counter is greater than 2}.
-% Dire que pour i-score il manque juste la possibilité de créer des données à la volées. Note : pourquoi ne pas simplement ajouter un noeud dans l'arbre lorsqu'il est accédé la première fois (s'il est dans le device local.)
+This can be modelled easily by maintaining counters for each segment, incrementing the counter when it is played, and having a global loop whose looping condition is \texttt{no counter is greater than 2}. However the musical parts would have to be written in a specific music-sheet oriented software.
+
+\paragraph{Alain Bonardi}
+Alain Bonardi is a french electro-acoustic composer; there are ten blocks that each contain a small part of piano sheet music; an external algorithm does a random draw of these blocks. There are some similarities with Stockhausen's piece, but, instead of leaving the choice of the order to the performer, it's the algorithm that makes the choice and the performer has to interpret the sheet music that is being shown to him in real time. In addition, each block contains controls for background music to play in ambisonics, independently of what the pianist is doing.
+
+Since a computer is generating the sheet music, the performer has to follow everything quickly. However, the interpretation can have a small degree of freedom : the performer's playing is recorded and compared with the displayed sheet music. When an algorithm detects that the part was successfully played, or if a timeout has expired, it then moves on to the next part.
 
 \paragraph{The Runner}
 This is an actual museum installation that is located in the Futuroscope, at the city of Poitiers in France. The goal is for children to test their running speed and compare themselves against a leaderboard of the best runners that took the attraction. It is based around two presence detectors, one at the beginning and one at the end of the running lane. However, there is some complexity involved to prevent the children from cheating, for instance by having one of their friends trigger the "finish line" sensor just after they triggered the start sensor. Timeouts are also necessary if a participant starts running but decides to never finish, not triggering the end sensor.
@@ -178,12 +180,14 @@ Precisely, the installation can be explained as follows :
 \begin{itemize}
     \item A "welcome" loop that displays a looping video and waits for an interaction.
     \item A main running loop, that starts after the triggering of the start sensor. It begins with a fixed duration announce video that goes "3.. 2.. 1..". While the child runs, there is another video and some music playing. 
-    
-    If the final sensor is triggered before 5 seconds, it is considered cheating and we break out of the main loop.
-    
-    If the final sensor is not triggered after 30 seconds, the race is considered abandonnée. 
-    
-    \item If the main loop does not leave in the "erroring" states, there is a standard finish video that lasts 5 seconds and shows the position of the current run in the podium. After a few seconds, we return to the welcome loop.
+    \begin{itemize}
+    	\item If the final sensor is triggered before 5 seconds, it is considered cheating and we break out of the main loop.
+    	
+    	\item Else, if the final sensor is not triggered after 30 seconds, the race is considered abandoned. 
+    	
+    	\item If the main loop does not leave in the "erroring" states, there is a standard finish video that lasts 5 seconds and shows the position of the current run in the podium. After a few seconds, we return to the welcome loop.
+    \end{itemize}
+      
     
     \item Overarching all this, there is a topmost loop that regularly checks if the installation is correctly networked with the museum backend. If it's not the case, everything is stopped and a generic "Please call a technician" message is shown.
 \end{itemize}
