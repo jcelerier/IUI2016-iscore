@@ -174,7 +174,7 @@ Alain Bonardi is a french electro-acoustic composer; there are ten blocks that e
 Since a computer is generating the sheet music, the performer has to follow everything quickly. However, the interpretation can have a small degree of freedom : the performer's playing is recorded and compared with the displayed sheet music. When an algorithm detects that the part was successfully played, or if a timeout has expired, it then moves on to the next part.
 
 \paragraph{The Runner}
-This is an actual museum installation that is located in the Futuroscope, at the city of Poitiers in France. The goal is for children to test their running speed and compare themselves against a leaderboard of the best runners that took the attraction. It is based around two presence detectors, one at the beginning and one at the end of the running lane. However, there is some complexity involved to prevent the children from cheating, for instance by having one of their friends trigger the "finish line" sensor just after they triggered the start sensor. Timeouts are also necessary if a participant starts running but decides to never finish, not triggering the end sensor.
+This is an actual museum installation that is located in the Futuroscope, at the city of Poitiers in France. The goal is for children to test their running speed and compare themselves against a leaderboard of the best runners that took the attraction. It is based around two movement detectors, one at the beginning and one at the end of the running lane. However, there is some complexity involved to prevent the children from cheating, for instance by having one of their friends trigger the "finish line" sensor just after they triggered the start sensor. Timeouts are also necessary if a participant starts running but decides to never finish, not triggering the end sensor.
 
 Precisely, the installation can be explained as follows : 
 \begin{itemize}
@@ -185,7 +185,7 @@ Precisely, the installation can be explained as follows :
     	
     	\item Else, if the final sensor is not triggered after 30 seconds, the race is considered abandoned. 
     	
-    	\item If the main loop does not leave in the "erroring" states, there is a standard finish video that lasts 5 seconds and shows the position of the current run in the podium. After a few seconds, we return to the welcome loop.
+    	\item If the main loop does not end in one of these "erroring" states, there is a standard finish video that lasts 5 seconds and shows the position of the current run in the podium. After a few seconds, we return to the welcome loop.
     \end{itemize}
       
     
@@ -260,24 +260,27 @@ void scenario()
 \label{fig.hardtofollow}
 \end{figure}
 
-The programmer also needs to keep track of the available data and devices that he can access; this is commonly achieved by using god objects that represent the external devices's state or something akin to haskell's World State concept. Else, a state-keeping object has to be passed across most of the method and function calls, which incurs a certain cost on the complexity of such software. Another common problematic is the method used to represent external devices. Some libraries will rather try to implement everything with the language's primitives and structures. Hence, an address of a device would be represented by a tree-like structure. Other would take an approach closer to a domain-specific language, by specifying the addresses in textual format that are to be parsed behind the scene. 
+The programmer also needs to keep track of the available data and devices that he can access; this is commonly achieved by using god objects that represent the external devices's state or something akin to Haskell's \texttt{RealWorld} concept\cite{launchbury1995state}. Else, a state-keeping object has to be passed across most of the method and function calls, which incurs a certain cost on the complexity of such software. Another common problematic is the method used to represent external devices. Some libraries will rather try to implement everything with the language's primitives and structures. Hence, an address of a device would be represented by a tree-like structure. Other would take an approach closer to a domain-specific language, by specifying the addresses in textual format that are to be parsed behind the scene. 
 
 Besides, another problem is reusability : most of the interactive applications are to be used once and then discarded since they are most of the time very different. Libraries exist, but even then they are generally customized by the final application author. Hence, any system wishing to improve on the current state of affairs would have to provide easy-to-use library facilities.
 
-Finally, the standard primitive for parallelization, threads, is highly unpractical to use because of the indeterminism of the operating system's scheduler. Other programming paradigms, like reactive programming, offers better tools to solve the problem of the control of multiple kinds of data at the same time; however it becomes harder to have a scenario split into multiple, unrelated parts. % source
+Finally, the standard primitive for parallelization, threads, is highly unpractical to use because of the indeterminism of the operating system's scheduler. Other programming paradigms, like reactive programming, offers better tools to solve the problem of the control of multiple kinds of data at the same time; however it then becomes harder to have a scenario split into multiple, unrelated parts that would follow each other.
 
 For instance, one can write such software with ActionScript (part of the Adobe Flash environment), Processing (a set of multimedia libraries based on Java) and OpenFrameworks, which is to C++ what Processing is to Java\cite{noble2009programming}. These languages or frameworks are general-purpose, but contain a lot of multimedia-oriented tools, to playback and modify video, or create particle systems. 
 
-Some domains have more specific tools : for instance, the LISP community has produced a wealth of languages able to represent interactive music  % source.
+Some domains have more specific tools : for instance, the LISP community has produced a wealth of languages able to represent and produce non-interactive and interactive music, like CommonMusic\cite{taube1997introduction} or Nyquist\cite{dannenbergnyquist}. INscore\cite{fober2013programming} and Antescofo with Ascograph\cite{coffy2014ascograph} are two other softwares dedicated the composition and authoring of interactive music scores, both with a dedicated domain-specific language and a GUI to control it.
 
-
-\subsubsection{Flow control models}
+\subsubsection{Graphical programming interactive applications}
+A lot of approaches exist with regards to visual programming. However, not all are conceived with the idea of managing time in mind. Those that are generally geared towards the kind of applications that we are interested in, or video games.
 
 
 * First present the raw time models, as well as the formal models for i-score?
 
 * Then present more advanced software / toolkits
 
+* Reprendre trucs dans présentation robots (moteurs de jeu, etc.), inscore
+
+* Scratch
 
  % du tout temporel au tout logique en passant par systèmes réactifs ?
 Max, PureData, React.[...], Integra Live (qui est plutôt orienté son), Unity \& envs de jeu, etc. (revoir slides), Chronic (cf. téléchargements), OpenMusic, Antescofo (et Ascograph), logiciels de la conférence sur appli réactives (cf. slack).
@@ -466,7 +469,7 @@ We then have an overview of all of our graphical elements. These make up what we
 
 % Note : cas ou on a une synchronisation mais la contrainte parente se termine avant
 
-\subsection{Hierarchy}
+\subsection{Hierarchy}\label{sec.hierarchy}
 Thanks to the notion of process, we can introduce the concept of hierarchy. The notion of scenario that we have presented earlier can itself be put into a process. Its specificity is the presence of a starting time node; the scenario is then a tree of constraints that flourishes from it. Practically speaking, all of the interaction with scenarios is done in a scenario process.
 
 The state of the scenario is simple : at a given time, fetch the state of all the running constraints inside of the scenario. This may in turn run triggers, starting the following constraints in the hierarchical scenario. This way, we can have infinite hierarchy.
