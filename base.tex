@@ -52,8 +52,8 @@
 % since its job is to redefine many LaTeX commands.
 \usepackage[pdftex]{hyperref}
 \hypersetup{
-pdftitle={SIGCHI Conference Proceedings Format},
-pdfauthor={LaTeX},
+pdftitle={Graphical Structured Temporal Programming for Interactive Applications},
+pdfauthor={Jean-Michaël Celerier},
 pdfkeywords={SIGCHI, proceedings, archival format},
 bookmarksnumbered,
 pdfstartview={FitH},
@@ -76,21 +76,18 @@ breaklinks=true,
 
 \numberofauthors{3}
 \author{
-  \alignauthor 1st Author Name\\
-    \affaddr{Affiliation}\\
-    \affaddr{Address}\\
-    \email{e-mail address}\\
-    \affaddr{Optional phone number}
-  \alignauthor 2nd Author Name\\
-    \affaddr{Affiliation}\\
-    \affaddr{Address}\\
-    \email{e-mail address}\\
-    \affaddr{Optional phone number}    
-  \alignauthor 3rd Author Name\\
-    \affaddr{Affiliation}\\
-    \affaddr{Address}\\
-    \email{e-mail address}\\
-    \affaddr{Optional phone number}
+  \alignauthor Redacted\\
+    \affaddr{Redacted}\\
+    \affaddr{Redacted}\\
+    \email{Redacted}
+  \alignauthor Redacted\\
+    \affaddr{Redacted}\\
+    \affaddr{Redacted}\\
+    \email{Redacted}    
+  \alignauthor Redacted\\
+    \affaddr{Redacted}\\
+    \affaddr{Redacted}\\
+    \email{Redacted}
 }
 
 \maketitle
@@ -110,21 +107,21 @@ and enables artists to express easily both temporal logic and structured program
 with facilities for automating and applying transformations to single and multi-dimensional parameters.
 \end{abstract}
 
-\keywords{
-	Guides; instructions; author's kit; conference publications;
-	keywords should be separated by a semi-colon. \newline
-	\textcolor{red}{Optional section to be included in your final version, 
-  but strongly encouraged.}
-}
+%\keywords{
+%	Guides; instructions; author's kit; conference publications;
+%	keywords should be separated by a semi-colon. \newline
+%	\textcolor{red}{Optional section to be included in your final version, 
+%  but strongly encouraged.}
+%}
 
-\category{H.5.m.}{Information Interfaces and Presentation (e.g. HCI)}{Miscellaneous}
+\category{D.2.2}{Design Tools and Techniques}{User interfaces}
 
-See: \url{http://www.acm.org/about/class/1998/}
-for more information and the full list of ACM classifiers
-and descriptors. \newline
-\textcolor{red}{Optional section to be included in your final version, 
-but strongly encouraged. On the submission page only the classifiers’ 
-letter-number combination will need to be entered.}
+%See: \url{http://www.acm.org/about/class/1998/}
+%for more information and the full list of ACM classifiers
+%and descriptors. \newline
+%\textcolor{red}{Optional section to be included in your final version, 
+%but strongly encouraged. On the submission page only the classifiers’ 
+%letter-number combination will need to be entered.}
 
 \section{Introduction}
 This paper presents a paradigm that aims to allow non-programmers 
@@ -134,7 +131,7 @@ The existing software stack is either oriented too much towards the
 cue paradigm, which is useful as long as there is no complex logic involved, 
 or towards the programming paradigm, where it is hard to write simple scenarios 
 like "move a spotlight in horizontal oscillation for ten seconds; after the first 5 
-seconds, if a dancer jumps on the stage, play a sound and increase reverberation steadily as long as the dancer is on stage".
+seconds, if a dancer jumps on the stage, then play a sound and increase reverberation steadily as long as the dancer is on stage".
 
 We will first present the current practices on the field, including the depiction of three specific artistic installations revolving around the idea of a computer-controlled orchestration.
 
@@ -147,7 +144,7 @@ Finally we will see how data is handled throughout the software.
 This model has evolved through many stages of refinement, first starting as an application of 
 Allen's relationships\cite{allen1983maintaining} and moving on to concurrent constraint models\cite{allombert2006concurrent,toro2010concurrent}, Petri nets\cite{allombert2007system,arias2014modelling}, finite automatons\cite{arias2015exploiting}, and reactive languages\cite{ariasexecuting}, which are all formal approaches which have each their advantages and drawbacks. 
 
-These are compared in~\cite{celerier2015ossia}, along with a more thorough presentation of the execution semantics of the given model.
+These different formal models are compared in~\cite{celerier2015ossia}, along with a more thorough presentation of the execution semantics of the present model.
 
 The present document takes the point of view of an user that would approach the graphical user interface. However, most of the concepts are actually implemented in a C++ API\cite{hogue2014ossia} that can be used to generate scenarios directly from code. Moreover, some concepts in the graphical interface are themselves built upon primitives offered in the API.
 
@@ -157,7 +154,7 @@ The need for authoring software able to operate in both the temporal and logical
 \subsection{Use cases}
 To explain properly the kind of artistic demeanors we are working with, three case studies will follow : two musical pieces and a museum installation. Another target for the method that we propose is the development of interactive kiosk-like user interfaces.
 
-\paragraph{Klavierstücke XI}
+\paragraph{Klavierstück XI}
 This is a music piece composed in 1957 by Karlheinz Stockhausen.
 
 The interpretation plays a huge part on the piece. It is composed of multiple "segments", a bit longer than musical bars. This is called a polyvalent structure.
@@ -389,8 +386,6 @@ The interface of a process (fig.~\ref{fig.processInterface}) is trivial and allo
 
 Hence, on a purely data-oriented point of view, a process can be seen as a succession of states. However this level of abstraction would be hard to manipulate directly by the authors, especially for automations. We should also note that the state needs not to be known at the moment of writing : one could write a process that returns a random value for each state for instance, or even have processes run their own clock.
 
-% TODO évaluer différences entre "process qui envoie les messages" et "contrainte qui pull"
-
 By default, a process lasts for as long as its parent constraint. But it is important to keep in mind that since a constraint has a minimal and maximal duration, it would be impossible to have interpolations since you would have to know when the ending has happened to be able to interpolate. 
 
 However, the formalism enables us to have a clean way to give a duration to each process, which will presented in section~\ref{sec.hierarchy}.
@@ -551,17 +546,32 @@ For instance, given the scenarisation abilities presented earlier, one could map
 
 A perspective would be the mapping of multi-dimensional parameters in a single view : for instance, what if we want to map the two-dimensional position $[x, y]$ of the dancer, to the $[hue, saturation]$ parameters of the light ?
 
-\subsection{Mappings spatiaux}
-%TODO                                                
-%Finally, we will try to present the most generalized form of mappings : spatial mappings.
+\subsection{Spatial mappings}
+Finally, we will try to present the most generalized form of mappings that is being implemented : spatial mappings. Here, we use the word spatial to refer to parameter spaces which can possibly be mapped into a graphical space that can be manipulated and displayed. 
 
-%With automations and one-dimensional mappings, the author has to define a curve that specifies the mapping of a set of data to another set of data.
+With automations and one-dimensional mappings, the author has to define a curve that specifies the mapping of a set of data to another set of data.
 
-%The idea presented here is a way to allow composers and authors to define such mappings, first directly from mathematical formulas, and then from other mappings.
+The idea presented here is a way to allow composers and authors to define such mappings, first directly from mathematical formulas, and then by combining mappings togethers.
 
+Let's give some examples, given two dancers on stage and a spotlight : 
+\begin{itemize}
+	\item The simplest case would be to power the spotlight when a danser is in an area on stage, like a circle of radius $r$ and center $C$.
+	\item We could add some logic : only power the spotlight when both dansers are in the area.
+	\item We could also create some data from the data we currently possess : for instance, powering the spotlight when the barycenter (let's name it $G$) of the system composed of both dansers is in the area.
+	\item A refinement would be to map the intensity of the light to the distance of $G$ to $C$.
+	\item What if $r$ changed ? For instance, the radius of the circle could be mapped to another control : the system would become entirely dynamic.
+\end{itemize}
 
-%Nous aimerions maintenant étendre nos travaux à des zones définies entièrement dans l'espace. Pour ce faire, nous utilisons la puissance complète des mathématiques à l'aide d'une bibliothèque de CAS. Ainsi, nous pouvons définir des zones à partir de notre arbre de paramètres et travailler sur des données spatiales : que se passe-t-il quand deux zones entrent en collision ?
-    
+To achieve this kind of flexibility, we define the notion of area. Let's consider $P_1, ... P_N$, $N$ metrical spaces that are related to numerical parameters, and $P = \prod\limits^N_{i=1}P_i$ the product of such spaces. We consider a subset $S$ of $P$ and $1_S$ its characteristic function. 
+
+We can set in advance some parameters to given numerical values : let $\mathbb{X}^N$ be the restriction of $P$ in this case. We call an \textit{area} the restriction of $1_S$ to $\mathbb{X}^N$. Practically speaking, this allows to have areas with some degrees of freedom and some parameters that are set by the user.
+
+For instance, if we take a circle's parametric equation : $(x - a)^2 + (y - b)^2 = c^2$, most of the time we take $x, y$ as variables and $a, b, c$ as parameters. However, we could actually choose the parameters we want to use the result afterwards in computations. For instance, the same equation mapped to a three-dimensional space of variables $x, y, c$ would yield a double cone instead of a circle.
+
+The remaining parameters could be mapped to constants, or parameters taken from the device tree with the query operator to introduce interactive areas.
+
+Then, we can apply computations involving multiple areas like finding intersections, etc. and use the result of such computations to feed either outbound parameters, or the computation of other areas. This allows for a large number of spatial possibilities. An implementation has been started as a process in i-score, using a computer algebra system, GiNaC\cite{bauer2002introduction}, to solve parametric equations with a given parameter set; the biggest open problem is the calculatory complexity for large domains, like areas defined in dimensions greater than 3. However, thanks to the type system of C++ we can seamlessly offer faster paths and approximate solutions for particular known and common shapes, like circles.
+
 \subsection{Extensibility}
 Since the process interface is open, anybody can write a process plug-in and be able to use it in i-score to perform his computations in time. For instance, suggested ideas have been to implement a small embedded scripting language, like LUA, as a process, which would allow authors knowledgeable in textual programming to extend the scenarios freely.
 
@@ -618,11 +628,18 @@ The second would be a save of the graphical state if we apply the "moving constr
 An interesting problem with traces is the synchronization with the original document. For instance, if a duration is changed in the main document, it could be interesting to keep it up to date in a given execution trace, to retroactively modify what happened if there was only a small deviation from the expected behaviour.
 
 \section{Conclusion}
-We presented in this paper an overview of the field of programming and development tools for the authoring of interactive artistic installations.
-- Time to develop artistic installations greatly reduced; but need to evaluate more.
-- REcapitulate the important points and achievements
-%% Logiciel ouvert et utilisable (API C++)
-%% Perspectives : autres implémentations (FPGA, kdbus, modèle de calcul ?)
+We presented in this paper an overview of the field of programming and development tools for the authoring of interactive artistic installations, and our contribution in the form of i-score, which is a GUI software, backed by formal semantics and specifications. 
+
+The model of i-score is born of the necessity of fitting programming temporal and structural logic as well as data in a same user interface. For this, we introduce elements based on a syntax which is principally defined graphically, although it can be used from a C++ API.
+
+We argue that using i-score allows the development of artistic installations to be greatly reduced, especially if they involve at the same time a certain degree of structural logic, that has to be encapsulated in time.
+
+We also provide a default set of elements that allows to work with the types of data that the authors are mostly used to : automations and mappings, and we propose ways to extend our model towards complete spatial mappings and a complete calculability model, adapted to time.
+
+Finally, due to the openness of the software and the presence of simple plug-in interfaces, we hope to allow the development of more involved control methods which may require intelligence on the behalf of the authoring software
+.
+\section{Acknowledgements}
+Redacted
 
 \bibliographystyle{SIGCHI-Reference-Format}
 \bibliography{base}
