@@ -155,7 +155,7 @@ The present document takes the point of view of an user that would approach the 
 The need for authoring software able to operate in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
 
 \subsection{Use cases}
-To explain properly the kind of artistic demeanors we are working with, there will be three case studies.
+To explain properly the kind of artistic demeanors we are working with, three case studies will follow : two musical pieces and a museum installation. Another target for the method that we propose is the development of interactive kiosk-like user interfaces.
 
 \paragraph{Klavierstücke XI}
 This is a music piece composed in 1957 by Karlheinz Stockhausen.
@@ -273,7 +273,7 @@ Some domains have more specific tools : for instance, the LISP community has pro
 \subsubsection{Graphical programming interactive applications}
 A lot of approaches exist with regards to visual programming. However, not all are conceived with the idea of managing time in mind. Those that are generally geared towards the kind of applications that we are interested in, or video games.
 
-A first instance of simple graphical programming language is Scratch\cite{resnick2009scratch}, built at the MIT. The language is very close from standard structured programming language, with explicit conditional and looping constructs; however building a program is done by assembling boxes together instead of typing.
+A first instance of simple graphical programming language is Scratch\cite{resnick2009scratch}, built at the MIT. The language is very close from standard structured programming, with explicit conditional and looping constructs; however building a program is done by assembling boxes together instead of typing.
 
 Then, many environments are stemming from the data flow model. For instance, it is implemented in video game engines like Unreal Engine's Blueprint system\cite{shah2014mastering}. Data-flow programming is based on the computation of the result of an operation not when it is asked for by the programmer, like it is done with imperative programming, but when the operands of the operation are set. Hence, the programmer describes an invariant and values that come from external sensors (or generators) are pumped into the system and transformed in an output.
 The most used in artistic and interactive installations are patcher software, like Max/MSP or PureData. Patchers use the data-flow model. A specific patcher software for audio algorithms exists : Integra Live\cite{bullock2011integra}.
@@ -283,6 +283,7 @@ Finally, not all flow programming languages are meant to produce real-time appli
 Generally, data-flow based programming language's graphical representation are graphs, where the nodes are computations and the directed edges move the output of a computation to the input of another.
 But there are other forms of multimedia-oriented graphical languages that put the emphasis on the time instead of the computations in their graphs. For instance, applications build with the MEF++ frameworks\cite{ackermann_direct_1994} represents time in boxes that can contain arbitrary multimedia data. The question of variable time has also been tackled with constraint solving algorithms in \cite{song_interactive_1999}; although it is only useful during the authoring part : the execution of the created multimedia "programs" is fixed.
 
+We will now present the model that has been built in order to be able to develop easily the kind of artistic installations that have been exhibited in the first part of this document. The methodology that has been used is domain driven design with contributions of a small commitee of experts and practicioners in the authoring of interactive installations. 
 \section{Temporal structure}\label{sec.temporal}
 \begin{figure}[h]
     \centering
@@ -311,10 +312,7 @@ This allows multiple time constraints to exist both serially, and in parallel, a
 As a byproduct, this allows a clean, graphical separation of concerns while still allowing the author to position related elements close to each other. % Parler du pb avec la verticalité.
 
 Finally, we can assess than constraints also have a logical role, which is of "saying what's next" : a time node will be triggered only after the previous constraints have finished.
-
-
 % Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
-
 
 \section{Logical structure}\label{sec.structured}
 After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
@@ -478,8 +476,9 @@ Now that we have a loop and a scenario process, we can allow processes in the us
 \section{Device trees}
 The messages in the states do refer to remote devices : other OSC-compliant software like Max/MSP or PureData instances, or MIDI devices. 
 
-The access inside i-score is done via a common interface, organized as a tree, since it's the most common and familiar way to present a document-like software to the outside.
-This interface can be reimplemented for other protocols to enable access from i-score to other software. For instance, it could be interesting to have remote procedure call capabilities, via the ways of d-bus, COM+, or other common inter-process communication protocols. More simply, it also allows to quickly add discoverable trees of parameters to media software by the ways of the Minuit~\cite{baltazar2009virage}
+The access inside i-score is done via a common interface, organized as a tree, since it's the most common and familiar way to present a document-like software to the outside. This is commonly refered as object models, the most famous being the HTML Document Object Model. However, there are a lot of other possibilities : Max/MSP and PureData patches can have a hierarchical object model thanks to the Jamoma frameworks presented earlier. Qt software generally revolves around a tree-like object model, too; a more thorough altough older list of such models is given by Richard Adler in \cite{adler1995emerging}.  
+
+This interface in i-score can be reimplemented for other protocols to enable access from i-score to other software. For instance, it could be interesting to have remote procedure call capabilities, via the ways of d-bus, COM+, or other common object-oriented inter-process communication protocols. More easily, it also allows to quickly add discoverable trees of parameters to media software by the ways of the Minuit~\cite{baltazar2009virage}
 protocol. 
 
 This have been done for Pure Data, Max/MSP (via the Jamoma frameworks\cite{place2006jamoma}), Quartz Composer, and Qt. The Minuit protocol can use UDP transport (via OSC messages) or TCP transport over websockets. The OSCQuery~\cite{oscquery} 
@@ -502,6 +501,8 @@ This would also allow to have loops whose duration depends on itself, to have so
 
 A loopback device is implemented to have fast access to local messages.
 
+Finally, because we can export this local tree over the protocols implemented with our API, this also allows to have remote interfaces, to have a graphical feedback in a web page using WebSockets for instance.
+
 \subsection{Data types in States}
 The first goal is to manage classical OSC data types : integers, floating point numbers, strings, arrays...
 
@@ -520,8 +521,9 @@ However the question of the representation of an unknown value, especially in a 
 Now that all of the temporal, structural and data-oriented primitives have been presented, we will show the processes that can be implemented in order to handle sepcific behaviours, like interpolations, for the authors.
 
 We will first study the specific case of the automation, very common in multimedia software, then study one-dimensional and spatial mappings.
+
 \subsection{Automations}
-The most important element in a sequencer is the automation : it's the primitive that maps data to time. However, it is still a hard problem to get right (source : article trajectoires), especially in term of user input mechanism. The two input mechanisms for curves currently implemented in i-score are manual positioning of points and segments, and recording of external values. 
+The most important element in a sequencer is the automation : it's the primitive that maps data to time. However, in term of user input mechanism a lot is possible, from traditional WIMP interaction\cite{cohen1999interface} to 3D manipulation of a hardware device mimicking a curve\cite{grossman2003interface}. The two input mechanisms for curves currently implemented in i-score are manual positioning of points and segments, and recording of external values. 
 
 There are two acceptable strategies for recording : the first would be recording the value of a parameter every few milliseconds, which is similar to audio recording. The other would be to record each time a message is received. Since there could be very fast changes of values, we chose to use the second method.
 However, since a lot of data can then be received when recording, we use the PSIMPL\cite{psimpl} algorithm library to reduce the number of values after recording to an acceptable range.
@@ -615,9 +617,8 @@ The second would be a save of the graphical state if we apply the "moving constr
 
 An interesting problem with traces is the synchronization with the original document. For instance, if a duration is changed in the main document, it could be interesting to keep it up to date in a given execution trace, to retroactively modify what happened if there was only a small deviation from the expected behaviour.
 
-
-\section{Evaluation}
 \section{Conclusion}
+We presented in this paper an overview of the field of programming and development tools for the authoring of interactive artistic installations.
 - Time to develop artistic installations greatly reduced; but need to evaluate more.
 - REcapitulate the important points and achievements
 %% Logiciel ouvert et utilisable (API C++)
