@@ -5,10 +5,11 @@
 
 
 %% EXAMPLE BEGIN -- HOW TO OVERRIDE THE DEFAULT COPYRIGHT STRIP -- (July 22, 2013 - Paul Baumann)
-% \toappear{Permission to make digital or hard copies of all or part of this work for personal or classroom use is 	granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than ACM must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org. \\
-% {\emph{CHI'14}}, April 26--May 1, 2014, Toronto, Canada. \\
-% Copyright \copyright~2014 ACM ISBN/14/04...\$15.00. \\
-% DOI string from ACM form confirmation}
+\toappear{Permission to make digital or hard copies of all or part of this work for personal or classroom use is 	granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than ACM must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org. \\
+ {\emph{IUI'16}}, March 7--10, 2016, Sonoma, CA, United States of America. \\
+ Copyright \copyright~2016 ACM . \\
+% DOI string from ACM form confirmation
+}
 %% EXAMPLE END -- HOW TO OVERRIDE THE DEFAULT COPYRIGHT STRIP -- (July 22, 2013 - Paul Baumann)
 
 
@@ -24,8 +25,6 @@
 \usepackage{times}    % comment if you want LaTeX's default font
 \usepackage{url}      % llt: nicely formatted URLs
 \usepackage{listings}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
 \usepackage{microtype}
 \usepackage{subcaption}
 
@@ -142,7 +141,7 @@ and then by extend to the elements relevant in a structured programming context.
 Finally we will see how data is handled throughout the software.
 
 This model has evolved through many stages of refinement, first starting as an application of 
-Allen's relationships\cite{allen1983maintaining} and moving on to concurrent constraint models\cite{allombert2006concurrent,toro2010concurrent}, Petri nets\cite{allombert2007system,arias2014modelling}, finite automatons\cite{arias2015exploiting}, and reactive languages\cite{ariasexecuting}, which are all formal approaches which have each their advantages and drawbacks. 
+Allen's relationships\cite{allen1983maintaining} and moving on to concurrent constraint models\cite{allombert2006concurrent,toro2010concurrent}, Petri nets\cite{allombert2007system,arias2014modelling}, reactive languages\cite{arias2014executing}, and finite automatons\cite{arias2015exploiting}, which are all formal approaches which have each their advantages and drawbacks. 
 
 These different formal models are compared in~\cite{celerier2015ossia}, along with a more thorough presentation of the execution semantics of the present model.
 
@@ -154,7 +153,7 @@ The need for authoring software able to operate in both the temporal and logical
 \subsection{Use cases}
 To explain properly the kind of artistic demeanors we are working with, three case studies will follow : two musical pieces and a museum installation. Another target for the method that we propose is the development of interactive kiosk-like user interfaces.
 
-\paragraph{Klavierstück XI}
+\paragraph{Klavierst\"uck XI}
 This is a music piece composed in 1957 by Karlheinz Stockhausen.
 
 The interpretation plays a huge part on the piece. It is composed of multiple "segments", a bit longer than musical bars. This is called a polyvalent structure.
@@ -281,7 +280,8 @@ Generally, data-flow based programming language's graphical representation are g
 But there are other forms of multimedia-oriented graphical languages that put the emphasis on the time instead of the computations in their graphs. For instance, applications build with the MEF++ frameworks\cite{ackermann_direct_1994} represents time in boxes that can contain arbitrary multimedia data. The question of variable time has also been tackled with constraint solving algorithms in \cite{song_interactive_1999}; although it is only useful during the authoring part : the execution of the created multimedia "programs" is fixed.
 
 We will now present the model that has been built in order to be able to develop easily the kind of artistic installations that have been exhibited in the first part of this document. The methodology that has been used is domain driven design with contributions of a small commitee of experts and practicioners in the authoring of interactive installations. 
-\section{Temporal structure}\label{sec.temporal}
+\section{Temporal structuring}
+\label{sectemporal}
 \begin{figure}[h]
     \centering
     \begin{minipage}[b]{.5\linewidth}
@@ -311,7 +311,8 @@ As a byproduct, this allows a clean, graphical separation of concerns while stil
 Finally, we can assess than constraints also have a logical role, which is of "saying what's next" : a time node will be triggered only after the previous constraints have finished.
 % Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
 
-\section{Logical structure}\label{sec.structured}
+\section{Logical structuring}
+\label{secstructured}
 After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
 The first element is the condition. For instance, we would like to say : "this temporal constraint will be played only if a given parameter has reached a value of 5".
 Hence, this is something that is at a lower level than classic if-then-else constructs; however we can rebuild them afterwards.
@@ -365,7 +366,7 @@ It shall also be noted that when we presented the time nodes and time constraint
 % TODO ifthenelse
 \section{Data structuring}
 Now that we have established the entirety of the elements necessary for logical and temporal structuring of scenarios, we shall study how data is handled in the system.
-As it could be seen in section~\ref{sec.temporal}, we have two temporal primitives : one that manages durations, and another that manages synchronization.
+As it could be seen previously, we have two temporal primitives : one that manages durations, and another that manages synchronization.
 
 The kind of data with which i-score is currently the most used is the OSC message, which maps an address in the format "/an/address/here" to a value. Multiple messages together form a state, which is analogous to a cue.
 
@@ -388,7 +389,7 @@ Hence, on a purely data-oriented point of view, a process can be seen as a succe
 
 By default, a process lasts for as long as its parent constraint. But it is important to keep in mind that since a constraint has a minimal and maximal duration, it would be impossible to have interpolations since you would have to know when the ending has happened to be able to interpolate. 
 
-However, the formalism enables us to have a clean way to give a duration to each process, which will presented in section~\ref{sec.hierarchy}.
+However, the formalism enables us to have a clean way to give a duration to each process, which will be presented in a further part.
 
 \begin{figure}
 	\centering
@@ -419,7 +420,7 @@ There are two point of views with regards to the handling of instantaneous data 
 \end{itemize}
 As for audio data, it is sometimes necessary to have a precise access to the behaviour that will take place when there are conflictual data for the same instant. % Note : différent de l'audio car là on a une notion d'unicité avec les timenodes)
 
-This case happens with curves. For instance, if we have two constraints following each other, with curves on the same parameter, we are tempted to say that since the time node represents an instant in time, there should be no difference between the end of the first curve and the beginning of the second. However, sometimes it is practical to have two curves following each other but not at the same value; for instance, this would happen with loops. Since we loop around a single time node, as per section~\ref{sec.structured}, this would enforce having the beginning of the curve equal to the end of the curve, which would not be really practical.
+This case happens with curves. For instance, if we have two constraints following each other, with curves on the same parameter, we are tempted to say that since the time node represents an instant in time, there should be no difference between the end of the first curve and the beginning of the second. However, sometimes it is practical to have two curves following each other but not at the same value; for instance, this would happen with loops. Since we loop around a single time node, this would enforce having the beginning of the curve equal to the end of the curve, which would not be really practical.
 
 Hence, the user has to specify what value he actually wants to be sent when there is a manifest discrepancy between a logical instant in the scenario, and a physical instant, whose granularity is its of the scheduler, be it the sound card's clock or the network message's clock.
 
@@ -449,7 +450,8 @@ We then have an overview of all of our graphical elements. These make up what we
 
 % Note : cas ou on a une synchronisation mais la contrainte parente se termine avant
 
-\subsection{Hierarchy}\label{sec.hierarchy}
+\subsection{Hierarchy}
+\label{sechierarchy}
 Thanks to the notion of process, we can introduce the concept of hierarchy. The notion of scenario that we have presented earlier can itself be put into a process. Its specificity is the presence of a starting time node; the scenario is then a tree of constraints that flourishes from it. Practically speaking, all of the interaction with scenarios is done in a scenario process.
 
 The state of the scenario is simple : at a given time, fetch the state of all the running constraints inside of the scenario. This may in turn run triggers, starting the following constraints in the hierarchical scenario. This way, we can have infinite hierarchy.
@@ -566,7 +568,7 @@ To achieve this kind of flexibility, we define the notion of area. Let's conside
 
 We can set in advance some parameters to given numerical values : let $\mathbb{X}^N$ be the restriction of $P$ in this case. We call an \textit{area} the restriction of $1_S$ to $\mathbb{X}^N$. Practically speaking, this allows to have areas with some degrees of freedom and some parameters that are set by the user.
 
-For instance, if we take a circle's parametric equation : $(x - a)^2 + (y - b)^2 = c^2$, most of the time we take $x, y$ as variables and $a, b, c$ as parameters. However, we could actually choose the parameters we want to use the result afterwards in computations. For instance, the same equation mapped to a three-dimensional space of variables $x, y, c$ would yield a double cone instead of a circle.
+For instance, if we take a circle's parametric equation : $(x - a)^2 + (y - b)^2 = c^2$, most of the time we take $x, y$ as variables and $a, b, c$ as parameters. However, we could actually choose the parameters we want to use the result afterwards in computations. For instance, the same equation mapped to a three-dimensional space of variables $x, y, c$ would yield a double cone area instead of a circle area.
 
 The remaining parameters could be mapped to constants, or parameters taken from the device tree with the query operator to introduce interactive areas.
 
@@ -585,7 +587,6 @@ There are plenty of parts that requires new ideas to be solved in i-score, espec
 This is especially important given that a failure in show control can generally cost a lot of money, if used for expositions for instances.
 
 Hence, in the following section, we present the possibilities that are available for visualisation and debugging the execution of scenarios.
-
 
 \subsection{Debugging}
 Debugging is generally used to understand and find out easily why did not a program produce the expected result. Here, we don't have too many problems due to low-level memory management and there cannot be crashes of the interpreter (minus potential bugs in its implementation).  However, as soon as the show's logic becomes complex, it is useful to have tools that makes the authors able to pinpoint where the execution of the show does not match the expected behaviour.
@@ -630,14 +631,13 @@ An interesting problem with traces is the synchronization with the original docu
 \section{Conclusion}
 We presented in this paper an overview of the field of programming and development tools for the authoring of interactive artistic installations, and our contribution in the form of i-score, which is a GUI software, backed by formal semantics and specifications. 
 
-The model of i-score is born of the necessity of fitting programming temporal and structural logic as well as data in a same user interface. For this, we introduce elements based on a syntax which is principally defined graphically, although it can be used from a C++ API.
+The model of i-score is born of the necessity of fitting programming temporal and structural logic as well as data in a same user interface. For this, we introduce elements based on a syntax which is principally defined graphically, although it can be used from a C++ API. These elements are layered : first the temporal syntax, then the logical syntax, and finally the data-oriented elements.  
 
 We argue that using i-score allows the development of artistic installations to be greatly reduced, especially if they involve at the same time a certain degree of structural logic, that has to be encapsulated in time.
 
 We also provide a default set of elements that allows to work with the types of data that the authors are mostly used to : automations and mappings, and we propose ways to extend our model towards complete spatial mappings and a complete calculability model, adapted to time.
 
-Finally, due to the openness of the software and the presence of simple plug-in interfaces, we hope to allow the development of more involved control methods which may require intelligence on the behalf of the authoring software
-.
+Finally, due to the openness of the software and the presence of simple plug-in interfaces, we hope to allow the development of more involved control and data management methods.
 \section{Acknowledgements}
 Redacted
 
