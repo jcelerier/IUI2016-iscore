@@ -124,28 +124,28 @@ with facilities for automating and applying transformations to single and multi-
 
 \section{Introduction}
 This paper presents a paradigm that aims to allow non-programmers 
-to conceive interactive applications easily and execute them in production. These interactive applications can be either musical pieces, interactive shows where the interaction may come from the performer, or even the spectators, museum installations and graphical interfaces.
+to conceive interactive applications easily and run them in production. These interactive applications can be either musical pieces, interactive shows where the interaction may come from the performer (or even from the spectators), museum installations and graphical interfaces.
 
 The existing software stack is either oriented too much towards the 
 cue paradigm, which is useful as long as there is no complex logic involved, 
-or towards the programming paradigm, where it is hard to write simple scenarios 
+or towards the programming paradigm, where it becomes hard to write simple scenarios 
 like "move a spotlight in horizontal oscillation for ten seconds; after the first 5 
-seconds, if a dancer jumps on the stage, then play a sound and increase reverberation steadily as long as the dancer is on stage".
+seconds, if a dancer jumps on the stage, then play a sound and start increasing reverberation steadily as long as the dancer is on stage".
 
-We will first present the current practices on the field, including the depiction of three specific artistic installations revolving around the idea of a computer-controlled orchestration.
+We will first present the current practices on the field, including the depiction of three specific installations and musical pieces revolving around the idea of a computer-controlled orchestration.
 
 We will then explain the paradigm of the i-score software suite, which allows to express complex scenarios in a single graphical interface. These scenarios involve both temporal logic and structured programming. They can afterwards be deported or even embedded in other tools thanks to a C++ API. 
 
 Our constructs will be presented by starting with the purely temporal ones, 
-and then by extend to the elements relevant in a structured programming context.
-Finally we will see how data is handled throughout the software.
+and then by extending to the elements relevant in a structured programming context.
+Finally we will see how data control is handled throughout the software.
 
 This model has evolved through many stages of refinement, first starting as an application of 
-Allen's relationships\cite{allen1983maintaining} and moving on to concurrent constraint models\cite{allombert2006concurrent,toro2010concurrent}, Petri nets\cite{allombert2007system,arias2014modelling}, reactive languages\cite{arias2014executing}, and finite automatons\cite{arias2015exploiting}, which are all formal approaches which have each their advantages and drawbacks. 
+Allen's relationships\cite{allen1983maintaining} and moving on to concurrent constraint models\cite{allombert2006concurrent,toro2010concurrent}, Petri nets\cite{allombert2007system,arias2014modelling}, reactive languages\cite{arias2014executing}, and finite automatons\cite{arias2015exploiting}, which are all formal approaches each with their advantages and drawbacks. 
 
 These different formal models are compared in~\cite{celerier2015ossia}, along with a more thorough presentation of the execution semantics of the present model.
 
-The present document takes the point of view of an user that would approach the graphical user interface. However, most of the concepts are actually implemented in a C++ API\cite{hogue2014ossia} that can be used to generate scenarios directly from code. Moreover, some concepts in the graphical interface are themselves built upon primitives offered in the API.
+The present document takes the point of view of an user that would discover the graphical user interface. However, most of the concepts are actually implemented in a C++ API\cite{hogue2014ossia} that can be used to generate scenarios directly from code. Moreover, some concepts in the graphical interface are themselves built upon primitives offered in the API.
 
 \subsection{Motivation}
 The need for authoring software able to operate in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
@@ -156,42 +156,38 @@ To explain properly the kind of artistic demeanors we are working with, three ca
 \paragraph{Klavierst\"uck XI}
 This is a music piece composed in 1957 by Karlheinz Stockhausen.
 
-The interpretation plays a huge part on the piece. It is composed of multiple "segments", a bit longer than musical bars. This is called a polyvalent structure.
+The interpretation plays a huge part on the piece. It is composed of multiple "segments", a bit longer than musical bars.
 
-The performer starts with one of the segments. When he finishes playing a segment, he chooses another randomly. When he wants to choose a segment that he has already played two times, the music stop.
+The performer starts with one of the segments. When he finishes playing a segment, he chooses another randomly. When he wants to choose a segment that he has already played two times, the music shall stop. This is called a polyvalent structure.
 
 The number of possible combinations is so high that any given interpretation made by chosing the segments randomly would likely be played for the first time.
 
 This can be modelled easily by maintaining counters for each segment, incrementing the counter when it is played, and having a global loop whose looping condition is \texttt{no counter is greater than 2}. However the musical parts would have to be written in a specific music-sheet oriented software.
 
 \paragraph{Pianotronics \#3}
-Alain Bonardi is a french electro-acoustic composer; in this musical piece there are ten blocks that each contain a small part of piano sheet music; an external algorithm does a random draw of these blocks. There are some similarities with Stockhausen's piece, but, instead of leaving the choice of the order to the performer, it's the algorithm that makes the choice and the performer has to interpret the sheet music that is being shown to him in real time. In addition, each block contains controls for background music to play in ambisonics, independently of what the pianist is doing.
+Alain Bonardi is a french electro-acoustic composer; in this musical piece there are ten blocks, each containing a small part of piano sheet music; an external algorithm does a random draw of these blocks. There are some similarities with Stockhausen's piece, but instead of leaving the choice of the order to the performer, the algorithm makes the choice and the performer has to interpret the sheet music that is being shown to him in real time. In addition, each block contains controls for background music to play in spatial sound, independently of what the pianist is doing.
 
-Since a computer is generating the sheet music, the performer has to follow everything quickly. However, the interpretation can have a small degree of freedom : the performer's playing is recorded and compared with the displayed sheet music. When an algorithm detects that the part was successfully played, or if a timeout has expired, it then moves on to the next part.
+Since a computer is generating the sheet music, the performer has to follow everything quickly. However, he can have a small degree of freedom : the interpretation is recorded and compared with the displayed sheet music. When an algorithm detects that the part was successfully played, or if a timeout has expired, the computer then moves to the next part.
 
 \paragraph{The Runner}
-This is an actual museum installation that is located in the Futuroscope, at the city of Poitiers in France. The goal is for children to test their running speed and compare themselves against a leaderboard of the best runners that took the attraction. It is based around two movement detectors, one at the beginning and one at the end of the running lane. However, there is some complexity involved to prevent the children from cheating, for instance by having one of their friends trigger the "finish line" sensor just after they triggered the start sensor. Timeouts are also necessary if a participant starts running but decides to never finish, not triggering the end sensor.
+This is an actual museum installation that is located in the Futuroscope, at the city of Poitiers in France. The goal is for children to test their running speed and compare themselves against a leaderboard of the best runners who went to the attraction. It is based around two movement detectors, one at the beginning and one at the end of the running lane. However, there is some complexity involved to prevent the children from cheating, for instance by having one of their friends trigger the "finish line" sensor just after they triggered the start sensor. Timeouts are also necessary if a participant starts running but decides to never finish, not triggering the end sensor.
 
 Precisely, the installation can be explained as follows : 
 \begin{itemize}
-    \item A "welcome" loop that displays a looping video and waits for an interaction.
-    \item A main running loop, that starts after the triggering of the start sensor. It begins with a fixed duration announce video that goes "3.. 2.. 1..". While the child runs, there is another video and some music playing. 
+    \item A "welcome" loop displays a looping video and waits for an interaction.
+    \item A main running loop starts after the triggering of the start sensor. It begins with a fixed duration announce video showing "3.. 2.. 1..". While the child runs, there is another video and some music playing in the background. 
     \begin{itemize}
-    	\item If the final sensor is triggered before 5 seconds, it is considered cheating and we break out of the main loop.
-    	
-    	\item Else, if the final sensor is not triggered after 30 seconds, the race is considered abandoned. 
-    	
-    	\item If the main loop does not end in one of these "erroring" states, there is a standard finish video that lasts 5 seconds and shows the position of the current run in the podium. After a few seconds, we return to the welcome loop.
-    \end{itemize}
-      
-    
-    \item Overarching all this, there is a topmost loop that regularly checks if the installation is correctly networked with the museum backend. If it's not the case, everything is stopped and a generic "Please call a technician" message is shown.
+    	\item If the final sensor is triggered before 5 seconds, it is considered cheating and we break out of the main loop.    	
+    	\item Else, if the final sensor is not triggered after 30 seconds, the race is considered abandoned.     	
+    	\item If the main loop does not end in one of these "erroring" states, there is a standard finish video that lasts 5 seconds and shows the position of the current race in the podium. After a few seconds, we return to the welcome loop.
+    \end{itemize}    
+    \item Overarching all this, there is a loop that regularly checks if the installation is correctly networked with the museum's computer backend. If it is not the case, everything is stopped and a generic "Please call a technician" message is shown.
 \end{itemize}
 
 \begin{figure}
     \centering
     \includegraphics[scale=0.6]{images/futuroscope.jpg}
-    \caption{The Runner installation. \tiny{©JL AUDY/FUTUROSCOPE}}
+    \caption{The Runner installation. \tiny{\textcopyright JL AUDY/FUTUROSCOPE}}
     \label{fig.futuroscope}
 \end{figure}
 
@@ -202,18 +198,18 @@ Currently, the whole logic is implemented in Max/MSP. A picture can be seen in f
 \subsection{Existing approaches}
 Now that we have exposed the kind of problems that we are tackling, we are going to review the existing methods that have been and are still used to conceive and run interactive applications.
 
-There are mostly three parts : first, the cue-based tools. This is a broad range which can go from extremely specialized software that would for instance only handle video, to more generic solutions that aim to control different kinds of media.
+There are mostly three categories : first, the cue-based tools. This is a broad range which can go from extremely specialized software that would for instance only handle video, to more generic solutions that aim to control different kinds of media.
 
 Then, the text-based programming tools. These are programming languages that are dedicated to the task of building interesting interactive applications and their user interfaces.
 
 Finally, there are specific flow-control models; they are between both axes. i-score fits into this category.
 
-In addition, we will have an overview of document object model paradigms. This is to present the kind of software that i-score is expected to control. % Peut-être mettre ça ailleurs, plus loin ?
+In addition, we will present later in this paper an overview of relevant object model paradigms. This is used to explain the family of software that i-score is expected to control and direct. % Peut-être mettre ça ailleurs, plus loin ?
 
 \subsubsection{Cue-based environments}
 This is the first kind of environment for content creation, and certainly one of the most used for shows, because it mimics the behaviour of real hardware such as lighting consoles.
 
-A cue is a set of data that maps to a certain state on stage. For instance, there would be a cue for the beginning of a new scene in a pièce de théâtre, that would set the lights in the correct positions and colors, and start playing a background music.
+A cue is a set of data that maps to a certain state on stage. For instance, there would be a cue for the beginning of a new scene in a theatre play, which would set the lights in the correct positions and colors, and start playing a background music.
 
 In this kind of environment, there is no manifest temporal relationships to speak of: the cue are organized in stacks that will generally follow the expected development of the show. A human is generally present to trigger the correct cues at the correct time, and adjusts if something goes wrong on stage.
 
@@ -221,12 +217,12 @@ An example of cue-based system for show control is given by Kim Youngjae in~\cit
 
 This is also similar to the session view of Ableton Live, with stacks of audio clips that are to be triggered by the performer. The timeline view of Live, however, does not enable interactivity. Modulo Pi is another hardware and software facility that works with video cues.
 
-These environments, overall, allow to set-up a show very easily - sometimes dragging and dropping the desired cues will be enough. But as soon as there is interactivity involved, this paradigm becomes useless : there is absolutely no flexibility apart from the one provided by a human operator, which may become overwhelmed if too much things happen on stage at the same time.
+These environments, overall, allow to set up a show very easily --- sometimes dragging and dropping the desired cues will be enough. But as soon as nteractivity is involved, this paradigm becomes useless : there is absolutely no flexibility apart from the one provided by a human operator, which may become overwhelmed if too much things happen on stage at the same time.
 
 \subsubsection{Programming-based environments}
-At the other range of capabilities lies the full-blown programming languages. They allow complete flexibility over what's happenning. However, very few artists are eager to learn how to program in order to write interactive show; besides, when the show relies heavily on temporal elements, the textual structuration doesn't make the flow of the program easy to understand, as can be seen in fig.~\ref{fig.hardtofollow}.
+At the other range of capabilities lies the full-blown programming languages. They allow complete flexibility over what's happening. However, very few artists are eager to learn how to program in order to write interactive show; besides, when the show relies heavily on temporal elements, the textual structuring does not make the flow of the program easy to understand, as can be seen in fig.~\ref{fig.hardtofollow}.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{lstlisting}[language=c++]
 GlobalState state;
 
@@ -256,28 +252,28 @@ void scenario()
 \label{fig.hardtofollow}
 \end{figure}
 
-The programmer also needs to keep track of the available data and devices that he can access; this is commonly achieved by using god objects that represent the external devices's state or something akin to Haskell's \texttt{RealWorld} concept\cite{launchbury1995state}. Else, a state-keeping object has to be passed across most of the method and function calls, which incurs a certain cost on the complexity of such software. Another common problematic is the method used to represent external devices. Some libraries will rather try to implement everything with the language's primitives and structures. Hence, an address of a device would be represented by a tree-like structure. Other would take an approach closer to a domain-specific language, by specifying the addresses in textual format that are to be parsed behind the scene. 
+The programmer also needs to keep track of the available data and devices that he can access; this is commonly achieved by using god objects that represent the external devices' state or something akin to Haskell's \texttt{RealWorld} concept\cite{launchbury1995state}. Else, a state-keeping object has to be passed across most of the method and function calls, which incurs a certain cost on the complexity of such software. Another common problematic is the method used to represent external devices. Some libraries will rather try to implement everything with the language's primitives and structures. Hence, an address of a device would be represented by a tree-like structure. Other would take an approach closer to a domain-specific language, by specifying the addresses in textual format that are to be parsed behind the scene. 
 
 Besides, another problem is reusability : most of the interactive applications are to be used once and then discarded since they are most of the time very different. Libraries exist, but even then they are generally customized by the final application author. Hence, any system wishing to improve on the current state of affairs would have to provide easy-to-use library facilities.
 
-Finally, the standard primitive for parallelization, threads, is highly unpractical to use because of the indeterminism of the operating system's scheduler. Other programming paradigms, like reactive programming, offers better tools to solve the problem of the control of multiple kinds of data at the same time; however it then becomes harder to have a scenario split into multiple, unrelated parts that would follow each other.
+Finally, the standard primitive for parallelization, threads, is highly unpractical to use because of the indeterminism of the operating system's scheduler. Other programming paradigms, like reactive programming, offers better tools to solve the problem of the control of multiple streams of data at the same time. However it then becomes harder to have a scenario split into multiple, unrelated parts that would follow each other or exist in parallel.
 
-For instance, one can write such software with ActionScript (part of the Adobe Flash environment), Processing (a set of multimedia libraries based on Java) and OpenFrameworks, which is to C++ what Processing is to Java\cite{noble2009programming}. These languages or frameworks are general-purpose, but contain a lot of multimedia-oriented tools, to playback and modify video, or create particle systems. 
+For instance, one can write such software with ActionScript (part of the Adobe Flash environment), Processing (a set of multimedia libraries based on Java) and OpenFrameworks (which is to C++ what Processing is to Java)\cite{noble2009programming}. These languages or frameworks are general-purpose, but contain a lot of multimedia-oriented tools, for instance to playback and modify video, or create particle systems. 
 
-Some domains have more specific tools : for instance, the LISP community has produced a wealth of languages able to represent and produce non-interactive and interactive music, like CommonMusic\cite{taube1997introduction} or Nyquist\cite{dannenbergnyquist}. INscore\cite{fober2013programming} and Antescofo with Ascograph\cite{coffy2014ascograph} are two other softwares dedicated the composition and authoring of interactive music scores, both with a dedicated domain-specific language and a GUI to control it.
+Some domains have more specific tools : for instance, the LISP community has produced a wealth of languages able to represent and produce non-interactive and interactive music, like CommonMusic\cite{taube1997introduction} or Nyquist\cite{dannenbergnyquist}. INscore\cite{fober2013programming} and Antescofo with Ascograph\cite{coffy2014ascograph} are two other softwares dedicated to the composition and authoring of interactive music scores, both based on a domain-specific language and a GUI to control it.
 
 \subsubsection{Graphical programming interactive applications}
-A lot of approaches exist with regards to visual programming. However, not all are conceived with the idea of managing time in mind. Those that are generally geared towards the kind of applications that we are interested in, or video games.
+A lot of approaches exist with regards to visual programming. However, not all are conceived with the idea of managing time in mind. Those that have explicit management of time, are generally geared towards the kind of applications that we are interested in, or video games.
 
 A first instance of simple graphical programming language is Scratch\cite{resnick2009scratch}, built at the MIT. The language is very close from standard structured programming, with explicit conditional and looping constructs; however building a program is done by assembling boxes together instead of typing.
 
-Then, many environments are stemming from the data flow model. For instance, it is implemented in video game engines like Unreal Engine's Blueprint system\cite{shah2014mastering}. Data-flow programming is based on the computation of the result of an operation not when it is asked for by the programmer, like it is done with imperative programming, but when the operands of the operation are set. Hence, the programmer describes an invariant and values that come from external sensors (or generators) are pumped into the system and transformed in an output.
+Then, many environments are stemming from the data flow model. For instance, it is implemented in video game engines like Unreal Engine's Blueprint system\cite{shah2014mastering}. Data-flow programming is based on the computation of the result of an operation not when it is asked for by the programmer, like with imperative programming, but when the operands of the operation are set. Hence, the programmer describes an invariant and values that come from external sensors (or generators) are pumped into the system and transformed in an output.
 The most used in artistic and interactive installations are patcher software, like Max/MSP or PureData. Patchers use the data-flow model. A specific patcher software for audio algorithms exists : Integra Live\cite{bullock2011integra}.
 
-Finally, not all flow programming languages are meant to produce real-time applications. For instance, OpenMusic\cite{bresson_openmusic:_2011} is a graphical language used for the generation of sheet music.
+Finally, not all flow programming languages are meant to produce real-time applications. For instance, OpenMusic\cite{bresson_openmusic:_2011} is a graphical language used for the generation of sheet music. It is based on a data-flow model built on top of Lisp.
 
 Generally, data-flow based programming language's graphical representation are graphs, where the nodes are computations and the directed edges move the output of a computation to the input of another.
-But there are other forms of multimedia-oriented graphical languages that put the emphasis on the time instead of the computations in their graphs. For instance, applications build with the MEF++ frameworks\cite{ackermann_direct_1994} represents time in boxes that can contain arbitrary multimedia data. The question of variable time has also been tackled with constraint solving algorithms in \cite{song_interactive_1999}; although it is only useful during the authoring part : the execution of the created multimedia "programs" is fixed.
+But there are other forms of multimedia-oriented graphical languages that put the emphasis on the time instead of the computations in their graphs. For instance, applications built with the MEF++ frameworks\cite{ackermann_direct_1994} represent time in boxes that can contain arbitrary multimedia data. The question of variable time has also been tackled with constraint solving algorithms in \cite{song_interactive_1999}; although it is only useful during the authoring part : the execution of the created multimedia "programs" is fixed.
 
 We will now present the model that has been built in order to be able to develop easily the kind of artistic installations that have been exhibited in the first part of this document. The methodology that has been used is domain driven design with contributions of a small commitee of experts and practicioners in the authoring of interactive installations. 
 \section{Temporal structuring}
@@ -286,11 +282,11 @@ We will now present the model that has been built in order to be able to develop
     \centering
     \begin{minipage}[b]{.5\linewidth}
         \centering
-        \includegraphics[scale=0.6]{images/timenode.png}
+        \includegraphics[scale=0.7]{images/timenode.png}
         \subcaption{Time constraints (horizontal),\\ and a time node (vertical)}
     \end{minipage}\begin{minipage}[b]{.5\linewidth}
     \centering
-    \includegraphics[scale=0.6]{images/souple.png}
+    \includegraphics[scale=0.7]{images/souple.png}
     \subcaption{A time constraint with min and max duration}
 \end{minipage}	
 
@@ -308,32 +304,33 @@ Then, we introduce a mean to synchronize multiple time constraints : a \textit{t
 This allows multiple time constraints to exist both serially, and in parallel, as can be seen in fig.~\ref{fig.cst.timenode}. 
 As a byproduct, this allows a clean, graphical separation of concerns while still allowing the author to position related elements close to each other. % Parler du pb avec la verticalité.
 
-Finally, we can assess than constraints also have a logical role, which is of "saying what's next" : a time node will be triggered only after the previous constraints have finished.
+Finally, we can assess that constraints also have a logical role, which is "telling what is next" : a time node will be triggered only after the previous constraints have finished.
 % Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
 
 \section{Logical structuring}
 \label{secstructured}
-After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
+After the presentation of the time-flow related primitives, we will introduce the first syntax elements related to traditional structured programming.
 The first element is the condition. For instance, we would like to say : "this temporal constraint will be played only if a given parameter has reached a value of 5".
-Hence, this is something that is at a lower level than classic if-then-else constructs; however we can rebuild them afterwards.
+Hence, this is something that is at a lower level than classic \textit{if-then-else} constructs; however we can rebuild them afterwards as shown in \cite{celerier2015ossia}.
 
-Due to the presence of temporal logic, there are actually two kinds of conditions in i-score : 
+Due to the presence of temporal logic, there are actually two kinds of conditions in i-score, both graphically part of the time nodes : 
 \begin{itemize}
 	\item The purely logical conditions; they cannot modify the flow of time, only be true or false. What matters is their value when they are being evaluated, which will cause the following constraints to be executed - or not. We call these \textit{time events}; visual depiction is in fig.~\ref{fig.logical.events}.
-	\item The time-flow controlling conditions. These have more power : they can trigger the execution of a whole time node when they become true. This is why some time constraint will have a minimum and a maximum : the combined min and max of all constraints ending on a given time node will collapse into its execution interval. This interval can be defined at run time in some cases %(cite).
-	We call these \textit{triggers}; visual depiction is in fig.~\ref{fig.logical.trigger}.
+	\item The time-flow controlling conditions. These have more power : they can trigger the execution of a whole time node when they become true. 
+    We call these \textit{triggers}; visual depiction is in fig.~\ref{fig.logical.trigger}. 
+    This is why some time constraints have a minimum and a maximum. The combined min and max of all constraints ending on a given time node will collapse into its potential execution interval. This interval sometimes must be computed at run-time. Such cases happen when multiple triggers follow each other and converge to a single time node. To handle this, the Cassowary constraint solving algorithm\cite{badros2001cassowary} is used.
 \end{itemize}
 
 \begin{figure}[h]
 	\centering
 	\begin{minipage}[b]{.5\linewidth}
 		\centering
-		\includegraphics[scale=0.6]{images/events.png}
+		\includegraphics[scale=0.7]{images/events.png}
 		\subcaption{Two synchronized events~\\(vertical, bold)}
 		\label{fig.logical.events}
 	\end{minipage}\begin{minipage}[b]{.5\linewidth}
 	\centering
-	\includegraphics[scale=0.6]{images/trigger.png}
+	\includegraphics[scale=0.7]{images/trigger.png}
 	\subcaption{A trigger (on top)}
 	\label{fig.logical.trigger}
     \end{minipage}	
@@ -342,13 +339,13 @@ Due to the presence of temporal logic, there are actually two kinds of condition
 \label{fig.logical}
 \end{figure}	
 
-Triggers have a lot of influence : once they become true, they will stop all the previous constraints of their time node, evaluate all the time events and start the constraints that follow time events that were true. The default behaviour is that a trigger is also triggered if the maximum duration is reached.
+Triggers have a lot of influence : once they become true, they will stop all the previous constraints of their time node, evaluate all the time events and start the constraints that follow time events that were evaluated to true. The default behaviour is that a trigger is also triggered if the maximum duration is reached.
 
-From there, we can start thinking about the implementation of loops. Most people used to audio production software would see loops as the repetition of a simple pattern that lasts a given amount of time. This is in stark contrast with the structured programming loop, where each iteration can yield completely different apparent results.
+From there, we can start thinking about the implementation of loops. Most people used to audio production software would see loops as the repetition of a simple pattern that lasts a given amount of time. This is in stark contrast with the structured programming loop (example shown in fig.~\ref{fig.loopcode}), where each iteration can yield completely different apparent results.
 
-To allow to do this graphically, we must separate clearly the pattern that the author specified and the result of the execution, which might show this pattern, each time changed a bit, multiple times.
+To allow to do this graphically, we must separate clearly the pattern that the author specified and the result of the execution, which might display this pattern repeated on screen, each time changed a bit according to the events that happened during each iteration.
 
-It shall also be noted that when we presented the time nodes and time constraints, we did not mention any explicit restrictions on the nodes that should be before and after a constraint; it can actually be the same. Once the constraint has been read, it triggers the end timenode, which restarts the reading of the constraint. If we put a trigger and minimums \& maximums to our constraint, we can then have loops with iterations of variable durations according to what's occuring on stage.
+It shall also be noted that when we presented the time nodes and time constraints, we did not mention any explicit restrictions on the nodes that should be before and after a constraint; it can actually be the same. Once the constraint has been read, it triggers its end time node, which in turn restarts the reading of the constraint. If we put a trigger and minimums \& maximums to our constraint, we can then have loops with iterations of variable durations according to what is occuring on stage and in the application.
 
 \begin{figure}
 	\centering
@@ -363,12 +360,11 @@ It shall also be noted that when we presented the time nodes and time constraint
 	\label{fig.loopcode}
 \end{figure}
 
-% TODO ifthenelse
 \section{Data structuring}
 Now that we have established the entirety of the elements necessary for logical and temporal structuring of scenarios, we shall study how data is handled in the system.
-As it could be seen previously, we have two temporal primitives : one that manages durations, and another that manages synchronization.
+As it could be seen previously, we have two temporal primitives : one that manages durations, the time constraint, and another that manages synchronization, the time node. We will present ways to store data adapted to these two elements.
 
-The kind of data with which i-score is currently the most used is the OSC message, which maps an address in the format "/an/address/here" to a value. Multiple messages together form a state, which is analogous to a cue.
+The kind of data i-score is currently the most used with is the OSC message, which maps an address in the format \texttt{/an/address/example} to a value. Multiple messages together form a state, which is analogous to the cue concept that was presented earlier.
 
 \subsection{Processes}
 
@@ -379,32 +375,33 @@ The kind of data with which i-score is currently the most used is the OSC messag
     \label{fig.processes} 
 \end{figure}
 
-To encapsulate data that is meant to last for some amount of time, we build the notion of the process. This is not without similarities with traditional operating system processes, albeit much simpler since they can be made in a purely functional way.
+To encapsulate data, controls and behaviours meant to last for some amount of time, we present the notion of the process. This is not without similarities with traditional operating system processes, albeit much simpler since they can be defined in a purely functional way.
 
 Processes are located in time constraints; a constraint can hold any number of processes. This is shown in fig.~\ref{fig.processes}.
 
-The interface of a process (fig.~\ref{fig.processInterface}) is trivial and allows for a lot of cases common in show-control. The constraint's execution semantics act like a playhead : there is a clock which ticks; on each tick the process's state is pumped. However, it is possible to parametrize what happens with the start and end states which act like parameters to the process. 
+The interface of a process (fig.~\ref{fig.processInterface}) is trivial and allows for a lot of cases common in show-control. The constraint's execution semantics act like a playhead : there is a clock which ticks; on each tick the process' state is pumped. However, it is possible to parametrize what happens with the start and end states which act like parameters to the process. 
 
 Hence, on a purely data-oriented point of view, a process can be seen as a succession of states. However this level of abstraction would be hard to manipulate directly by the authors, especially for automations. We should also note that the state needs not to be known at the moment of writing : one could write a process that returns a random value for each state for instance, or even have processes run their own clock.
 
-By default, a process lasts for as long as its parent constraint. But it is important to keep in mind that since a constraint has a minimal and maximal duration, it would be impossible to have interpolations since you would have to know when the ending has happened to be able to interpolate. 
+By default, a process lasts for as long as its parent constraint. But it is important to keep in mind that since a constraint has a minimal and maximal duration, it would be impossible to have interpolations since one would have to know when the ending has happened to be able to interpolate. 
 
-However, the formalism enables us to have a clean way to give a duration to each process, which will be presented in a further part.
+However, the elements of the formalism that have been presented up to now enable to give a duration to each process. The method will be presented in a further section.
 
 \begin{figure}
 	\centering
 \begin{lstlisting}
-    Process:
+    struct Process {
        State  state(Time)
        State& startState()
        State& endState()
+   };
 \end{lstlisting}
 \caption{Basic interface of a process}
 \label{fig.processInterface}
 \end{figure}
 
 \subsection{States}
-The process have a meaning with regard to durations. However, another common necessity is sending cues at a precise time. For instance, while the position of a lightspot should be interpolated during a few hundred milliseconds to prevent breakage, stopping a music player should be a single message.
+The processes have a meaning with regard to durations. However, another common necessity is to send cues at a precise time. For instance, while the position of a spotlight should be interpolated during a few hundred milliseconds to prevent breakage, stopping a music player should be a single message.
 
 In order to achieve this, i-score materializes the notion of instantaneous \textit{state} in a graphical syntax element.
 
@@ -415,14 +412,14 @@ There are two point of views with regards to the handling of instantaneous data 
 
 \begin{itemize}
 	\item The first is that the flow of time is a continuum; an instant does not have a real existence and it can only be approached like an irrational number would be.
-	This allows simple temporal reasoning : the author can without a doubt say "B follows A" (in the Allen meaning) and know what the state will be at the intersection of both.
-	\item The second is that sometimes, a raw, low-level access to the data that will be scheduled is necessary in order to facilitate work. For instance, in audio software, sometimes sample access is required.   
+	This allows simple temporal reasoning : the author can without a doubt say that a unique value is present between $A$ and $B$ in a "$B$ follows $A$" (in the Allen meaning) situation.
+	\item The second is that sometimes, a raw, low-level access to the data that will be scheduled is necessary in order to facilitate actual work. For instance, in audio software, sometimes, access to the individual sample content is required.
 \end{itemize}
 As for audio data, it is sometimes necessary to have a precise access to the behaviour that will take place when there are conflictual data for the same instant. % Note : différent de l'audio car là on a une notion d'unicité avec les timenodes)
 
-This case happens with curves. For instance, if we have two constraints following each other, with curves on the same parameter, we are tempted to say that since the time node represents an instant in time, there should be no difference between the end of the first curve and the beginning of the second. However, sometimes it is practical to have two curves following each other but not at the same value; for instance, this would happen with loops. Since we loop around a single time node, this would enforce having the beginning of the curve equal to the end of the curve, which would not be really practical.
+This case happens with curves. For instance, if we have two constraints following each other, with curves operating on the same parameters, we are tempted to say that since the time node represents an instant in time, there should be no difference between the end of the first curve and the beginning of the second. However, sometimes it is practical to have two curves following each other but not at the same value; for instance, this would happen with loops. Since we loop around a single time node, this would enforce having the beginning of the curve equal to the end of the curve, which would not be really practical if we were to loop around a curve that sets the play head in a video.
 
-Hence, the user has to specify what value he actually wants to be sent when there is a manifest discrepancy between a logical instant in the scenario, and a physical instant, whose granularity is its of the scheduler, be it the sound card's clock or the network message's clock.
+Hence, the user has to specify what value he actually wants to be sent when there is a manifest discrepancy between a logical instant in the scenario, and a physical instant, whose granularity is its of the scheduler, be it the sound card's clock or the network messages' clock.
 
 The different possibilities would be keeping a single value, having some behaviour that would involve taking the mean of all the values, or sending each value one after the other.
 
@@ -433,8 +430,9 @@ In order to achieve this, the state is going to save multiple values :
 	\item The values of the following processes.
 \end{itemize}
 
-These values can then be priorized and merged according to arbitrary rules. The user is then able to choose which values are to be synchronized and which ones should be considered independent.
-It is also possible to set a filter on the repetition of a given message. For instance, if should happen that a message "/play" was sent to a video player twice in a few milliseconds, the second message could be ignored. This is however done at the adress level, not at the scenario level. The effect can be seen on figure \ref{fig.curvesync}. % Mettre ailleurs
+These values can then be prioritized and merged according to arbitrary rules. The user is then able to choose which values are to be synchronized and which ones should be considered independent. The effect can be seen on figure \ref{fig.curvesync}.
+
+It is also possible to set a filter on the repetition of a given message. For instance, if should happen that a message "/play" was sent to a video player twice in a few milliseconds, the second message could be ignored. This is however done at the adress level, not at the scenario level. 
 
 \begin{figure}[h]
 	\centering
