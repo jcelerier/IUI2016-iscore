@@ -140,6 +140,17 @@ We will first present the current practices on the field, including the depictio
 
 We will then explain the paradigm of the i-score software suite, which allows to express complex scenarios in a single graphical interface. These scenarios involve both temporal logic and structured programming. They can afterwards be deported or even embedded in other tools thanks to a C++ API. 
 
+Our constructs will be presented by starting with the purely temporal ones, 
+and then by extend to the elements relevant in a structured programming context.
+Finally we will see how data is handled throughout the software.
+
+This model has evolved through many stages of refinement, first starting as an application of 
+Allen's relationships\cite{allen1983maintaining} and moving on to concurrent constraint models\cite{allombert2006concurrent,toro2010concurrent}, Petri nets\cite{allombert2007system,arias2014modelling}, finite automatons\cite{arias2015exploiting}, and reactive languages\cite{ariasexecuting}, which are all formal approaches which have each their advantages and drawbacks. 
+
+These are compared in~\cite{celerier2015ossia}, along with a more thorough presentation of the execution semantics of the given model.
+
+The present document takes the point of view of an user that would approach the graphical user interface. However, most of the concepts are actually implemented in a C++ API\cite{hogue2014ossia} that can be used to generate scenarios directly from code. Moreover, some concepts in the graphical interface are themselves built upon primitives offered in the API.
+
 \subsection{Motivation}
 The need for authoring software able to operate in both the temporal and logical domains arises as soon as an artist wants to set-up a show which may have different outcomes according to the actions of the performer, or even of the participants.
 
@@ -221,21 +232,21 @@ GlobalState state;
 
 void light1()
 {
-  state.at("/light/r").set(255);
+  state["/light/r"] = 255;
   usleep(200000);    
-  state.at("/light/r").set(0);
+  state["/light/r"] = 0;
   for(int i = 0; i < 100; i++)
   {
-    if(state.at("/sound/volume") > 50)
-      state.at("/light/g").set(i);        
-    state.at("/light/b").set(255 - i);
+    if(state["/sound/volume"] > 50)
+      state["/light/g"] = i;        
+    state["/light/b"] = 255 - i;
     usleep(32000);
   }
 }
 
 void scenario()
 {
-  state.at("/sound").set(true);
+  state["/sound"] = true;
   light1();
   usleep(10000);
   light1();
@@ -258,7 +269,8 @@ Some domains have more specific tools : for instance, the LISP community has pro
 
 \subsubsection{Flow control models}
 
-* First present the raw time models, as well as the formal models for i-score
+
+* First present the raw time models, as well as the formal models for i-score?
 
 * Then present more advanced software / toolkits
 
@@ -277,26 +289,16 @@ Temps souple\cite{song_interactive_1999}
 CORBA, DBus, DOM HTML, DOM Qt, DOM Jamoma...
 
 
-\section{A model for orchestration}
-We will present our constructs by starting with the purely temporal ones, 
-and then extend to the constructs relevant in a structured programming context.
-Finally we will see how data is handled.
-
-This model has evolved through many stages of refinement, first starting as an application of 
-Allen's relationships and moving on to NTCCs, Petri nets, finite automatons, and reactive languages. (sources).
-
-The present document takes the point of view of an user that would approach the graphical user interface. However, most of the concepts are actually implemented in a C++ API (source) that can be used to generate scenarios directly from code. Moreover, some concepts in the graphical interface actually build themselves upon primitives offered in the API.
-
-\subsection{Specification of temporal relationships}\label{sec.temporal}
+\section{Specification of temporal relationships}\label{sec.temporal}
 \begin{figure}[h]
     \centering
     \begin{minipage}[b]{.5\linewidth}
         \centering
-        \includegraphics[scale=0.5]{images/timenode.png}
+        \includegraphics[scale=0.6]{images/timenode.png}
         \subcaption{Time constraints (horizontal),\\ and a time node (vertical)}
     \end{minipage}\begin{minipage}[b]{.5\linewidth}
     \centering
-    \includegraphics[scale=0.5]{images/souple.png}
+    \includegraphics[scale=0.6]{images/souple.png}
     \subcaption{A time constraint with min and max duration}
 \end{minipage}	
 
@@ -320,7 +322,7 @@ Finally, we can assess than constraints also have a logical role, which is of "s
 % Problème des contraintes à l'édition / à l'exécution : certains arguent que tout devrait être souple à l'exécution et rien à l'édition; d'autre le contraire. D'ou plusieurs modes d'édition grâce à un CSP.
 
 
-\subsection{Structured temporal programming}\label{sec.structured}
+\section{Structured temporal programming}\label{sec.structured}
 After the presentation of the time-flow related primitives, we will introduce the first syntax elements that are related to structured programming.
 The first element is the condition. For instance, we would like to say : "this temporal constraint will be played only if a given parameter has reached a value of 5".
 Hence, this is something that is at a lower level than classic if-then-else constructs; however we can rebuild them afterwards.
@@ -336,12 +338,12 @@ Due to the presence of temporal logic, there are actually two kinds of condition
 	\centering
 	\begin{minipage}[b]{.5\linewidth}
 		\centering
-		\includegraphics[scale=0.5]{images/events.png}
+		\includegraphics[scale=0.6]{images/events.png}
 		\subcaption{Two synchronized events~\\(vertical, bold)}
 		\label{fig.logical.events}
 	\end{minipage}\begin{minipage}[b]{.5\linewidth}
 	\centering
-	\includegraphics[scale=0.5]{images/trigger.png}
+	\includegraphics[scale=0.6]{images/trigger.png}
 	\subcaption{A trigger (on top)}
 	\label{fig.logical.trigger}
     \end{minipage}	
@@ -477,6 +479,7 @@ We can also easily control the play speed of the whole document by adjusting the
     
 In the same way, the loop is implemented as a process so that it can be manipulated more easily and provide specific GUI rendering, since we do not want to see a constraint wrap around itself, but rather have it repeat its pattern.
 
+Now that we have a loop and a scenario process, we can allow processes in the user interface to get their own duration : this is simply done by embedding them in a scenario process, with a constraint of the given duration at the API level. We can replace the scenario process by a loop process if we want to loop the content of the process for all the duration of the parent constraint instead.
 \section{State trees}
 The messages in the states do refer to remote devices : other OSC-compliant software like Max/MSP or PureData instances, or MIDI devices. 
 
